@@ -114,7 +114,6 @@ public partial class EditorController : ControllerBase
                 VkController.SendMessage(userMessage, GoToMenuButtons, dialog);
                 break;
 
-
             case PayloadTemplates.GiveEditorPayload:
                 if (!Configuration.GetValue<bool>("EditorGrantEnabled"))
                 {
@@ -132,7 +131,6 @@ public partial class EditorController : ControllerBase
                 VkController.SendMessage(PhraseFramework.AgreeWithRules,
                     AgreeWithRulesButtons, dialog);
                 break;
-
 
             case PayloadAdminActions.LimitPanel:
                 VkController.SendMessage(PhraseFramework.LimitPanel,
@@ -236,6 +234,8 @@ public partial class EditorController : ControllerBase
         if (vkEvent.Type == "message_new")
         {
             var message = Message.FromJson(new VkResponse(vkEvent.Object));
+            Logger.LogInformation("message_new\n\tUser: {User}\n\tContent: «{Content}»",
+                message.FromId, message.Text);
             await DialogProcessor(message.PeerId, message.FromId, message);
         }
 

@@ -1,11 +1,11 @@
 ﻿using nng.Enums;
-using nng.Exceptions;
 using nng_bot.Exceptions;
 using nng_bot.Extensions;
 using nng_bot.Frameworks;
 using nng_bot.Models;
 using Sentry;
 using VkNet.Enums.SafetyEnums;
+using VkNet.Exception;
 using static nng_bot.API.KeyBoardFramework;
 using static nng_bot.Configs.UsersConfigurationProcessor;
 
@@ -16,14 +16,6 @@ public partial class EditorController
     private static bool CheckIfBanned(UserProfile profile)
     {
         return (profile.Banned && !profile.Deleted) || IfUserIsBannedInBot(profile.Id);
-    }
-
-    private bool CheckForBackingTask(long user)
-    {
-        if (!Status.BackingTaskInProgress) return false;
-        VkController.SendMessage(PhraseFramework.YouAreOnCoolDown,
-            GoToMenuButtons, user);
-        return true;
     }
 
     private bool CheckIfCooldown(long user)
@@ -108,7 +100,6 @@ public partial class EditorController
     {
         var userProfile = CacheFramework.LoadProfile(user);
         var priority = IfUserPrioritized(user);
-        if (CheckForBackingTask(user)) return;
 
         if (userProfile.CreatedOn != null && (DateTime.Now - userProfile.CreatedOn.Value).TotalDays < 180)
         {
@@ -169,7 +160,6 @@ public partial class EditorController
         var cachedGroups = CacheFramework.LoadCache();
         var priority = IfUserPrioritized(user);
         var joinedProfile = CacheFramework.LoadProfile(user);
-        if (CheckForBackingTask(user)) return;
 
         EditorRequest request;
         try
@@ -269,7 +259,7 @@ public partial class EditorController
         {
             VkController.EditManager(user, request.Group, ManagerRole.Editor);
         }
-        catch (VkFrameworkMethodException e)
+        catch (VkApiException e)
         {
             Logger.LogWarning("Не удалось выдать редактора {User}: {Exception}: {Message}",
                 user, e.GetType(), e.Message);

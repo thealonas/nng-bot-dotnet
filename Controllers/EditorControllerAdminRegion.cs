@@ -1,11 +1,11 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
-using nng.Exceptions;
 using nng_bot.Enums;
 using nng_bot.Extensions;
 using nng_bot.Frameworks;
 using nng_bot.Models;
 using VkNet.Enums.SafetyEnums;
+using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.Keyboard;
 using static nng_bot.API.KeyBoardFramework;
@@ -291,7 +291,7 @@ public partial class EditorController
             {
                 VkFramework.UnBlock(group, userObject);
             }
-            catch (VkFrameworkMethodException e)
+            catch (VkApiException e)
             {
                 Logger.LogError("Невозможно разбанить пользователя в группе {Group}: {Type}: {Message}",
                     cacheGroup.Id, e.GetType(), e.Message);

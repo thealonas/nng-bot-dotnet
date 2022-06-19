@@ -9,6 +9,7 @@ using nng_bot.Configs;
 using nng_bot.Enums;
 using nng_bot.Exceptions;
 using nng_bot.Models;
+using VkNet.Exception;
 
 namespace nng_bot.Frameworks;
 
@@ -234,7 +235,7 @@ public class CacheFramework
                 var userName = $"{user.FirstName} {user.LastName}";
                 profileName = userName;
             }
-            catch (VkFrameworkMethodException e)
+            catch (VkApiException e)
             {
                 _logger.LogWarning("Can't get user name {@E}", e.Message);
                 profileName = "❌";

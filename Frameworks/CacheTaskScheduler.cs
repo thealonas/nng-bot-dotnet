@@ -1,8 +1,8 @@
 ﻿using nng.Data;
-using nng.Exceptions;
 using nng.Models;
 using nng_bot.API;
 using nng_bot.Models;
+using VkNet.Exception;
 
 namespace nng_bot.Frameworks;
 
@@ -83,7 +83,7 @@ public class CacheScheduledTaskProcessor
             {
                 saveData.Data.Add(Api.GetGroupInfo(group));
             }
-            catch (VkFrameworkMethodException e)
+            catch (VkApiException e)
             {
                 Logger.LogError("Не удалось обработать сообщество {Group}: {Message}", group, e.Message);
             }

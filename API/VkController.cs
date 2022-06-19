@@ -1,7 +1,7 @@
-﻿using nng.Exceptions;
-using nng.VkFrameworks;
+﻿using nng.VkFrameworks;
 using nng_bot.Models;
 using VkNet.Enums.SafetyEnums;
+using VkNet.Exception;
 
 namespace nng_bot.API;
 
@@ -30,7 +30,7 @@ public class VkController
         {
             VkFrameworkHttp.SendMessage(message, keyboard, peer);
         }
-        catch (VkFrameworkMethodException e)
+        catch (VkApiException e)
         {
             Logger.LogWarning("{ExceptionType} {Message}", e.GetType(), e.Message);
         }
