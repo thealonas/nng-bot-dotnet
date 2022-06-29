@@ -392,7 +392,7 @@ public partial class EditorController
     {
         var cache = CacheFramework.LoadCache();
         var list = new CacheObjectList(cache.Data.Select(group => new CacheObject(group.Id)).ToList());
-        var celling = UsersConfiguration.GroupManagersCelling;
+        var celling = UsersConfiguration.GroupManagersCeiling;
 
         var phrase = PhraseFramework.CacheOutput(cache.Data.Count, $"{list.TotalBusySlots}/{list.TotalSlots}",
             $"{list.TotalMembers}", list.TotalMembersWithoutDuplicates, list.TotalManagers,
@@ -403,7 +403,7 @@ public partial class EditorController
         {
             var canGrantEditors = group.ManagerTotalCount >= celling ? "✘" : "✔";
             groups.AppendLine(
-                $"{canGrantEditors} @{group.ShortName} — редачи: {group.ManagerTotalCount}/100 — участники: {group.MembersTotalCount}");
+                $"{canGrantEditors} @{group.ShortName} — редакторы: {group.ManagerTotalCount}/{celling} — участники: {group.MembersTotalCount}");
         }
 
         VkController.SendMessage(phrase, null, user);

@@ -33,7 +33,7 @@ public partial class EditorController
         var cache = CacheFramework.LoadCache();
         var groups = Enumerable.Reverse(cache.Data).ToList();
         var priority = IfUserPrioritized(userId);
-        var managersCelling = UsersConfiguration.GroupManagersCelling;
+        var managersCelling = ManagersCeiling;
 
         CacheGroup potentialGroup;
         try
@@ -235,8 +235,7 @@ public partial class EditorController
         if (!data.Members.Contains(request.User))
         {
             VkController.SendMessage(PhraseFramework.YouHaveNotJoinedClub,
-                GoToMenuButtons, user);
-            Status.UsersToEditorGiving.Remove(request);
+                IveJoinedButtons, user);
             await Task.Delay(500);
             ReplaceLongToGroup(ref cachedGroups, request);
             CacheFramework.SaveCache(cachedGroups);

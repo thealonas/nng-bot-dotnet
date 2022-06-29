@@ -94,7 +94,7 @@ public partial class EditorController : ControllerBase
 
         if (PayloadAdminActions.IsAdminPayload(message.Payload) && !IfUserIsAdmin(user))
         {
-            VkController.SendMessage(PhraseFramework.Error("System.Text.Json.SerializationException(24; 32)"),
+            VkController.SendMessage(PhraseFramework.Error("NRE"),
                 GoToMenuButtons, dialog);
             return;
         }
@@ -103,6 +103,8 @@ public partial class EditorController : ControllerBase
         {
             case PayloadTemplates.ReturnBack:
             case PayloadTemplates.StartDialog:
+                if (Status.UsersToEditorGiving.Any(x => x.User == user))
+                    Status.UsersToEditorGiving.RemoveWhere(x => x.User == user);
                 VkController.SendMessage(PhraseFramework.MainMenu,
                     GetStartMenuKeyboard(user), dialog);
                 break;

@@ -16,7 +16,7 @@ public static class UsersConfigurationProcessor
 
     public static int EditorRestrictions => UsersConfiguration.EditorRestriction;
 
-    public static int ManagersCelling => UsersConfiguration.GroupManagersCelling;
+    public static int ManagersCeiling => UsersConfiguration.GroupManagersCeiling;
 
     public static void SaveUsersConfig(UsersConfig config)
     {
