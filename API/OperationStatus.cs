@@ -8,6 +8,7 @@ public class OperationStatus
     public OperationStatus()
     {
         AdminUnbanRequestPages = new Dictionary<long, int>();
+        UsersAskedForEditor = new Dictionary<long, int>();
         CoolDownUsers = new HashSet<long>();
         UsersToEditorGiving = new HashSet<EditorRequest>();
         AdminRequests = new HashSet<AdminRequest>();
@@ -27,6 +28,7 @@ public class OperationStatus
     public HashSet<long> UnbannedUsers { get; }
     public HashSet<long> UsersBotIsAvailable { get; }
     public Dictionary<long, int> AdminUnbanRequestPages { get; }
+    public Dictionary<long, int> UsersAskedForEditor { get; }
 
     public void AddLimitlessUserCoolDown(long user)
     {
@@ -44,6 +46,12 @@ public class OperationStatus
     {
         AdminRequests.RemoveWhere(x => x.Admin == request.Admin || !x.IsValid);
         AdminRequests.Add(request);
+    }
+
+    public void AddUserAskedForEditor(long id)
+    {
+        if (UsersAskedForEditor.ContainsKey(id)) UsersAskedForEditor[id]++;
+        else UsersAskedForEditor.Add(id, 1);
     }
 
     public bool IfUserIsUnbanned(long user)

@@ -1,23 +1,34 @@
 ﻿using nng.VkFrameworks;
 using nng_bot.Models;
+using VkNet;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Exception;
+using VkNet.Model;
 
 namespace nng_bot.API;
 
 public class VkController
 {
-    public VkController(ILogger<VkController> logger,
-        VkFrameworkHttp vkFrameworkHttp, VkFramework vkFramework)
+    public VkController(ILogger<VkController> logger, VkFramework vkFramework,
+        VkFrameworkHttp vkFrameworkHttp, IConfiguration configuration)
     {
         Logger = logger;
         VkFrameworkHttp = vkFrameworkHttp;
         VkFramework = vkFramework;
+        Configuration = configuration;
+
+        GroupFramework = new VkApi();
+        GroupFramework.Authorize(new ApiAuthParams
+        {
+            AccessToken = configuration["Auth:DialogGroupToken"]
+        });
     }
 
     private VkFrameworkHttp VkFrameworkHttp { get; }
-    private VkFramework VkFramework { get; }
+    public VkFramework VkFramework { get; }
+    public VkApi GroupFramework { get; }
     private ILogger<VkController> Logger { get; }
+    private IConfiguration Configuration { get; }
 
     public void EditManager(long user, long group, ManagerRole role)
     {
@@ -32,7 +43,7 @@ public class VkController
         }
         catch (VkApiException e)
         {
-            Logger.LogWarning("{ExceptionType} {Message}", e.GetType(), e.Message);
+            Logger.LogWarning("{ExceptionType}: {Message}", e.GetType(), e.Message);
         }
     }
 
@@ -50,5 +61,19 @@ public class VkController
         returnCache.ShortName = data.ShortName;
         returnCache.ManagerTotalCount = data.ManagerCount;
         return returnCache;
+    }
+
+    public void SetEditorStatus(long count)
+    {
+        try
+        {
+            VkFrameworkExecution.Execute(() =>
+                VkFramework.Api.Status.Set($"🤠 всего пользователей: {count}",
+                    Configuration.GetValue<long>("Auth:DialogGroupId")));
+        }
+        catch (VkApiException e)
+        {
+            Logger.LogWarning("{ExceptionType}: {Message}", e.GetType(), e.Message);
+        }
     }
 }

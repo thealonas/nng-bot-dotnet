@@ -31,6 +31,7 @@ public class Startup
 
         services.AddSingleton(_ => new VkFrameworkHttp(Configuration.GetSection("Auth:DialogGroupToken").Value));
         services.AddSingleton<VkController>();
+        services.AddSingleton<StatusFramework>();
         services.AddSingleton<OperationStatus>();
         services.AddSingleton<CacheFramework>();
         services.AddHostedService<CacheScheduledTask>();

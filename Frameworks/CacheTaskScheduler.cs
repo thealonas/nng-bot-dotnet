@@ -8,10 +8,13 @@ namespace nng_bot.Frameworks;
 
 public class CacheScheduledTaskProcessor
 {
+    private readonly StatusFramework _framework;
+
     public CacheScheduledTaskProcessor(ILogger<CacheScheduledTaskProcessor> logger, VkController api,
         IConfiguration configuration, CacheFramework cacheFramework,
-        OperationStatus operationStatus, PhraseFramework phraseFramework)
+        OperationStatus operationStatus, PhraseFramework phraseFramework, StatusFramework framework)
     {
+        _framework = framework;
         Logger = logger;
         Api = api;
         Configuration = configuration;
@@ -74,6 +77,7 @@ public class CacheScheduledTaskProcessor
         OperationStatus.AdminRequests.Clear();
         OperationStatus.UsersToEditorGiving.Clear();
         OperationStatus.AdminUnbanRequestPages.Clear();
+        OperationStatus.UsersAskedForEditor.Clear();
         OperationStatus.LimitlessLimit.Clear();
 
         foreach (var group in groups)
@@ -101,6 +105,13 @@ public class CacheScheduledTaskProcessor
 
         saveData.CreatedOn = DateTime.Now;
         CacheFramework.SaveCache(saveData);
+
+        Logger.LogInformation("Обновляем диалоги для статуса…");
+        var count = _framework.GetConversationsCount();
+        Logger.LogInformation("Количество диалогов для статуса: {Count}", count);
+        _framework.UpdateStatus(count);
+        Logger.LogInformation("Статус обновлен");
+
         Logger.LogInformation("Кэш обновлен успешно");
         InProgress = false;
         NextRun = DateTime.Now.AddHours(Configuration.GetValue<int>("Cache:UpdatePerHours"));

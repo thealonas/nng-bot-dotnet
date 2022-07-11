@@ -151,6 +151,14 @@ public partial class EditorController
             return;
         }
 
+        Status.AddUserAskedForEditor(user);
+        if (Status.UsersAskedForEditor[user] > 3)
+        {
+            VkController.SendMessage(PhraseFramework.YouAreOnCoolDown,
+                GoToMenuButtons, user);
+            return;
+        }
+
         Status.AddEditorRequest(new EditorRequest(user, group.Id));
         VkController.SendMessage(PhraseFramework.PleaseJoinGroup(group), IveJoinedButtons, user);
     }
@@ -295,7 +303,7 @@ public partial class EditorController
             return;
         }
 
-        VkController.SendMessage(PhraseFramework.YouHaveNotJoinedClub, GoToMenuButtons,
+        VkController.SendMessage(PhraseFramework.YouHaveNotJoinedClub, IveJoinedButtonsLessThanFiftySubs,
             user);
     }
 
