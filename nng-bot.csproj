@@ -15,7 +15,7 @@
 
     <PropertyGroup>
         <PackageId>nng-bot</PackageId>
-        <PackageVersion>1.1.2</PackageVersion>
+        <PackageVersion>1.2.0</PackageVersion>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Authors>likhner;RomanKochetov</Authors>
         <RepositoryUrl>https://github.com/MrAlonas/nng-bot.git</RepositoryUrl>
@@ -23,7 +23,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7"/>
-        <PackageReference Include="nng" Version="1.1.0"/>
+        <PackageReference Include="nng" Version="1.2.0"/>
         <PackageReference Include="Sentry.AspNetCore" Version="3.19.0"/>
         <PackageReference Include="VkNet" Version="1.70.0"/>
     </ItemGroup>

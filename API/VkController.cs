@@ -25,7 +25,7 @@ public class VkController
     }
 
     private VkFrameworkHttp VkFrameworkHttp { get; }
-    public VkFramework VkFramework { get; }
+    private VkFramework VkFramework { get; }
     public VkApi GroupFramework { get; }
     private ILogger<VkController> Logger { get; }
     private IConfiguration Configuration { get; }
@@ -67,9 +67,8 @@ public class VkController
     {
         try
         {
-            VkFrameworkExecution.Execute(() =>
-                VkFramework.Api.Status.Set($"🤠 всего пользователей: {count}",
-                    Configuration.GetValue<long>("Auth:DialogGroupId")));
+            VkFramework.SetGroupStatus(Configuration.GetValue<long>("Auth:DialogGroupId"),
+                $"🤠 всего пользователей: {count}");
         }
         catch (VkApiException e)
         {
