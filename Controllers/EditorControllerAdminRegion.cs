@@ -275,21 +275,15 @@ public partial class EditorController
     private void ProcessUnbanUserInAllGroups(long admin, UnbanRequest request)
     {
         var data = CacheFramework.LoadCache().Data;
-        var userObject = new User
-        {
-            Id = request.UserId
-        };
+        var id = request.UserId;
         foreach (var cacheGroup in data)
         {
             var banned = VkFramework.GetBanned(cacheGroup.Id);
             if (banned.All(x => x.Id != request.UserId)) continue;
-            var group = new Group
-            {
-                Id = cacheGroup.Id
-            };
+            var group = cacheGroup.Id;
             try
             {
-                VkFramework.UnBlock(group, userObject);
+                VkFramework.UnBlock(group, id);
             }
             catch (VkApiException e)
             {

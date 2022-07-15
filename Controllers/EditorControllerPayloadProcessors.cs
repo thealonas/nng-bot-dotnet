@@ -163,7 +163,7 @@ public partial class EditorController
         VkController.SendMessage(PhraseFramework.PleaseJoinGroup(group), IveJoinedButtons, user);
     }
 
-    private async Task ProcessIveJoined(long user)
+    private void ProcessIveJoined(long user)
     {
         var cachedGroups = CacheFramework.LoadCache();
         var priority = IfUserPrioritized(user);
@@ -237,14 +237,14 @@ public partial class EditorController
             return;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        Thread.Sleep(TimeSpan.FromSeconds(2));
 
         var data = VkController.GetGroupInfo(request.Group);
         if (!data.Members.Contains(request.User))
         {
             VkController.SendMessage(PhraseFramework.YouHaveNotJoinedClub,
                 IveJoinedButtons, user);
-            await Task.Delay(500);
+            Thread.Sleep(TimeSpan.FromMilliseconds(500));
             ReplaceLongToGroup(ref cachedGroups, request);
             CacheFramework.SaveCache(cachedGroups);
             return;
@@ -280,7 +280,7 @@ public partial class EditorController
             return;
         }
 
-        await Task.Delay(1000);
+        Thread.Sleep(TimeSpan.FromSeconds(1));
         ReplaceLongToGroup(ref cachedGroups, request);
         if (priority) Status.AddLimitlessUserCoolDown(user);
         else Status.CoolDownUsers.Add(user);

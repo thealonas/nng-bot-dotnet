@@ -15,7 +15,7 @@
 
     <PropertyGroup>
         <PackageId>nng-bot</PackageId>
-        <PackageVersion>1.2.0</PackageVersion>
+        <PackageVersion>1.2.1</PackageVersion>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Authors>likhner;RomanKochetov</Authors>
         <RepositoryUrl>https://github.com/MrAlonas/nng-bot.git</RepositoryUrl>

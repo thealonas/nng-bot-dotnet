@@ -57,7 +57,7 @@ public partial class EditorController : ControllerBase
         return IfUserIsAdmin(id) ? AdminStartButtons : StartButtons;
     }
 
-    private async Task DialogProcessor(long? peer, long? userId, Message message)
+    private void DialogProcessor(long? peer, long? userId, Message message)
     {
         if (peer == null || userId == null)
         {
@@ -152,7 +152,7 @@ public partial class EditorController : ControllerBase
                 break;
 
             case PayloadTemplates.IveJoined:
-                await ProcessIveJoined(user);
+                ProcessIveJoined(user);
                 break;
 
             case PayloadTemplates.IveJoinedInFiftySubs:
@@ -227,7 +227,7 @@ public partial class EditorController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Dialog([FromBody] VkEvent vkEvent)
+    public IActionResult Dialog([FromBody] VkEvent vkEvent)
     {
         if (!IsAllowed(vkEvent.GroupId, vkEvent.Secret)) return Ok("ok");
 
@@ -238,7 +238,7 @@ public partial class EditorController : ControllerBase
             var message = Message.FromJson(new VkResponse(vkEvent.Object));
             Logger.LogInformation("message_new\n\tUser: {User}\n\tContent: «{Content}»",
                 message.FromId, message.Text);
-            await DialogProcessor(message.PeerId, message.FromId, message);
+            new Thread(() => DialogProcessor(message.PeerId, message.FromId, message)).Start();
         }
 
         return Ok("ok");
