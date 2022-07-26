@@ -24,7 +24,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7"/>
         <PackageReference Include="nng" Version="1.2.0"/>
-        <PackageReference Include="Sentry.AspNetCore" Version="3.20.0"/>
+        <PackageReference Include="Sentry.AspNetCore" Version="3.20.1"/>
         <PackageReference Include="VkNet" Version="1.70.0"/>
     </ItemGroup>
 
