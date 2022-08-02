@@ -29,6 +29,7 @@ public partial class PhraseFramework
     public string YourAccountIsTooYoung => GetPhrase("YourAccountIsTooYoung");
     public string YourRequestHasBeenRejected => GetPhrase("YourRequestHasBeenRejected");
     public string YourRequestNoLongerValid => GetPhrase("YourRequestNoLongerValid");
+    public string YourUnbanStillInProgress => GetPhrase("YourUnbanStillInProgress");
 
     public string CacheOutput(int groups, string slots, string members, long membersWithoutDuplicates, long managers,
         long managersWithoutDuplicates)

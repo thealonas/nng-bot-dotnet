@@ -1,3 +1,4 @@
+using nng;
 using nng.VkFrameworks;
 using nng_bot.API;
 using nng_bot.Frameworks;
@@ -37,6 +38,13 @@ public class Startup
         services.AddHostedService<CacheScheduledTask>();
         services.AddSingleton<PhraseFramework>();
         services.AddSingleton<CacheScheduledTaskProcessor>();
+
+
+        services.AddSingleton<VkDialogHelper>();
+        services.AddSingleton<VkDialogPayloadHandler>();
+        services.AddSingleton<VkDialogAdminHandler>();
+        services.AddSingleton<VkDialogUnbanRequests>();
+        services.AddSingleton<DialogEntry>();
     }
 
     private static void LoadInstant(IApplicationBuilder app)

@@ -1,10 +1,11 @@
 ﻿using nng.Data;
 using nng.Models;
 using nng_bot.API;
+using nng_bot.Frameworks;
 using nng_bot.Models;
 using VkNet.Exception;
 
-namespace nng_bot.Frameworks;
+namespace nng;
 
 public class CacheScheduledTaskProcessor
 {
