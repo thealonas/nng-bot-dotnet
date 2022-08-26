@@ -1,5 +1,5 @@
-﻿using nng.VkFrameworks;
-using nng_bot.API;
+﻿using nng_bot.API;
+using nng.VkFrameworks;
 using VkNet.Exception;
 using VkNet.Model.RequestParams;
 
@@ -11,11 +11,12 @@ public class StatusFramework
     private readonly long _groupId;
     private readonly ILogger<StatusFramework> _status;
 
-    public StatusFramework(VkController controller, IConfiguration configuration, ILogger<StatusFramework> status)
+    public StatusFramework(VkController controller, ILogger<StatusFramework> status)
     {
         _controller = controller;
         _status = status;
-        _groupId = configuration.GetValue<long>("Auth:DialogGroupId");
+        var config = EnvironmentConfiguration.GetInstance().Configuration;
+        _groupId = config.Auth.DialogGroupId;
     }
 
     public long GetConversationsCount()

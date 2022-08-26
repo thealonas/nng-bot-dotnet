@@ -1,14 +1,14 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
-using nng.Enums;
-using nng.Exceptions;
-using nng.Misc;
-using nng.VkFrameworks;
 using nng_bot.API;
 using nng_bot.Configs;
 using nng_bot.Enums;
 using nng_bot.Exceptions;
 using nng_bot.Models;
+using nng.Enums;
+using nng.Exceptions;
+using nng.Misc;
+using nng.VkFrameworks;
 using VkNet.Exception;
 
 namespace nng_bot.Frameworks;
@@ -19,19 +19,18 @@ public class CacheFramework
     public const string BannedUserFilePath = "cache/banned_users_requests.json";
 
     private readonly ILogger<CacheFramework> _logger;
-
     private readonly Dictionary<long, string> _names;
     private readonly int _validDatetime;
     private readonly VkFramework _vkFramework;
 
-    public CacheFramework(IConfiguration configuration, OperationStatus status,
-        ILogger<CacheFramework> logger, VkFramework vkFramework)
+    public CacheFramework(OperationStatus status, ILogger<CacheFramework> logger, VkFramework vkFramework)
     {
         Status = status;
         _logger = logger;
         _vkFramework = vkFramework;
         _names = new Dictionary<long, string>();
-        _validDatetime = configuration.GetSection("Cache").GetValue<int>("UpdatePerHours");
+        var environmentConfiguration = EnvironmentConfiguration.GetInstance();
+        _validDatetime = environmentConfiguration.Configuration.Cache.UpdatePerHours;
     }
 
     private OperationStatus Status { get; }

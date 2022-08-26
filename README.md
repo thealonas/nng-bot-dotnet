@@ -18,26 +18,18 @@
 
 ## Настройка
 
-### appsettings.json
+### Переменные среды
 
-```
-{
-  "DataURL": "Ссылка на общий список (см. MrAlonas/nng)",
-  "EditorGrantEnabled": true, <- Включена ли выдача редакторов
-  "LogUser": Айди страницы человека, которому будут отправляться логи,
-  "Auth": {
-    "UserToken": "Токен страницы, от которого выполняются действия",
-    "DialogGroupId": Айди группы,
-    "DialogGroupToken": "Токен группы",
-    "DialogGroupSecret": "Секретный ключ",
-    "DialogGroupConfirm": "Строка, которую должен вернуть сервер"
-  },
-  "Cache": {
-    "UpdateAtStart": true, <- Обновлять ли кэш при запуске
-    "UpdatePerHours": Интервал обновления кэша в часах
-  }
-}
-```
+* `DataURL` — Ссылка на [общий список](https://github.com/MrAlonas/nng#datajson)
+* `EditorGrantEnabled` **(true)** — Включена ли выдача редакторов
+* `LogUser` — Айди страницы человека, которому будут отправляться логи
+* `UserToken` — Токен страницы, от которой выполняются действия
+* `DialogGroupId` — Айди группы
+* `DialogGroupToken` — Токен группы
+* `DialogGroupSecret` — Секретный ключ
+* `DialogGroupConfirm` — Строка, которую должен вернуть сервер
+* `UpdateAtStart` **(true)** — Обновлять ли кэш при запуске
+* `UpdatePerHours` **(4)** — Интервал обновления кэша в часах
 
 ### users.json
 

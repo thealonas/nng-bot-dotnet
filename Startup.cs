@@ -1,19 +1,19 @@
 using nng;
-using nng.VkFrameworks;
 using nng_bot.API;
 using nng_bot.Frameworks;
+using nng.VkFrameworks;
 using VkNet.Exception;
 
 namespace nng_bot;
 
 public class Startup
 {
-    public Startup(IConfiguration configuration)
-    {
-        Configuration = configuration;
-    }
+    private readonly EnvironmentConfiguration _configuration;
 
-    private IConfiguration Configuration { get; }
+    public Startup()
+    {
+        _configuration = EnvironmentConfiguration.GetInstance();
+    }
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -21,7 +21,7 @@ public class Startup
         services.AddMvc().AddNewtonsoftJson();
         try
         {
-            services.AddSingleton(_ => new VkFramework(Configuration.GetSection("Auth:UserToken").Value));
+            services.AddSingleton(_ => new VkFramework(_configuration.Configuration.Auth.UserToken));
         }
         catch (Exception e)
         {
@@ -30,7 +30,7 @@ public class Startup
             throw;
         }
 
-        services.AddSingleton(_ => new VkFrameworkHttp(Configuration.GetSection("Auth:DialogGroupToken").Value));
+        services.AddSingleton(_ => new VkFrameworkHttp(_configuration.Configuration.Auth.DialogGroupToken));
         services.AddSingleton<VkController>();
         services.AddSingleton<StatusFramework>();
         services.AddSingleton<OperationStatus>();
@@ -38,7 +38,6 @@ public class Startup
         services.AddHostedService<CacheScheduledTask>();
         services.AddSingleton<PhraseFramework>();
         services.AddSingleton<CacheScheduledTaskProcessor>();
-
 
         services.AddSingleton<VkDialogHelper>();
         services.AddSingleton<VkDialogPayloadHandler>();

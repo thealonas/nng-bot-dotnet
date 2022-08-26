@@ -1,5 +1,6 @@
-﻿using nng.VkFrameworks;
+﻿using nng_bot.Frameworks;
 using nng_bot.Models;
+using nng.VkFrameworks;
 using VkNet;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Exception;
@@ -10,17 +11,17 @@ namespace nng_bot.API;
 public class VkController
 {
     public VkController(ILogger<VkController> logger, VkFramework vkFramework,
-        VkFrameworkHttp vkFrameworkHttp, IConfiguration configuration)
+        VkFrameworkHttp vkFrameworkHttp)
     {
         Logger = logger;
         VkFrameworkHttp = vkFrameworkHttp;
         VkFramework = vkFramework;
-        Configuration = configuration;
 
         GroupFramework = new VkApi();
+        Configuration = EnvironmentConfiguration.GetInstance().Configuration;
         GroupFramework.Authorize(new ApiAuthParams
         {
-            AccessToken = configuration["Auth:DialogGroupToken"]
+            AccessToken = Configuration.Auth.DialogGroupToken
         });
     }
 
@@ -28,7 +29,7 @@ public class VkController
     private VkFramework VkFramework { get; }
     public VkApi GroupFramework { get; }
     private ILogger<VkController> Logger { get; }
-    private IConfiguration Configuration { get; }
+    private Config Configuration { get; }
 
     public void EditManager(long user, long group, ManagerRole role)
     {
@@ -67,7 +68,7 @@ public class VkController
     {
         try
         {
-            VkFramework.SetGroupStatus(Configuration.GetValue<long>("Auth:DialogGroupId"),
+            VkFramework.SetGroupStatus(Configuration.Auth.DialogGroupId,
                 $"🤠 всего пользователей: {count}");
         }
         catch (VkApiException e)

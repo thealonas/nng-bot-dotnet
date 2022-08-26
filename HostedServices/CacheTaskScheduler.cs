@@ -1,8 +1,8 @@
-﻿using nng.Data;
-using nng.Models;
-using nng_bot.API;
+﻿using nng_bot.API;
 using nng_bot.Frameworks;
 using nng_bot.Models;
+using nng.Helpers;
+using nng.Models;
 using VkNet.Exception;
 
 namespace nng;
@@ -12,16 +12,16 @@ public class CacheScheduledTaskProcessor
     private readonly StatusFramework _framework;
 
     public CacheScheduledTaskProcessor(ILogger<CacheScheduledTaskProcessor> logger, VkController api,
-        IConfiguration configuration, CacheFramework cacheFramework,
-        OperationStatus operationStatus, PhraseFramework phraseFramework, StatusFramework framework)
+        CacheFramework cacheFramework, OperationStatus operationStatus, PhraseFramework phraseFramework,
+        StatusFramework framework)
     {
         _framework = framework;
         Logger = logger;
         Api = api;
-        Configuration = configuration;
         CacheFramework = cacheFramework;
         OperationStatus = operationStatus;
         PhraseFramework = phraseFramework;
+        Config = EnvironmentConfiguration.GetInstance().Configuration;
     }
 
     public DateTime NextRun { get; set; }
@@ -29,9 +29,9 @@ public class CacheScheduledTaskProcessor
     private OperationStatus OperationStatus { get; }
     private ILogger<CacheScheduledTaskProcessor> Logger { get; }
     private VkController Api { get; }
-    private IConfiguration Configuration { get; }
     private CacheFramework CacheFramework { get; }
     private PhraseFramework PhraseFramework { get; }
+    private Config Config { get; }
 
     private bool InProgress
     {
@@ -53,17 +53,17 @@ public class CacheScheduledTaskProcessor
         UpdateCache(default);
     }
 
-    public async void UpdateCache(object? state)
+    public void UpdateCache(object? state)
     {
         CacheFramework.CheckCache(CacheFramework.CacheFilePath);
         CacheFramework.CheckCache(CacheFramework.BannedUserFilePath);
-        var data = await DataHelper.GetDataAsync(Configuration["DataUrl"]);
+        var data = DataHelper.GetData(Config.DataUrl);
 
         var groups = data.GroupList.ToList();
 
         if (CacheFramework.IfCacheValid())
         {
-            NextRun = DateTime.Now.AddHours(Configuration.GetValue<int>("Cache:UpdatePerHours"));
+            NextRun = DateTime.Now.AddHours(Config.Cache.UpdatePerHours);
             Logger.LogInformation("Кэш валиден, обновлять не требуется");
             return;
         }
@@ -93,7 +93,7 @@ public class CacheScheduledTaskProcessor
                 Logger.LogError("Не удалось обработать сообщество {Group}: {Message}", group, e.Message);
             }
 
-            await Task.Delay(1000);
+            Task.Delay(1000).GetAwaiter().GetResult();
         }
 
         Logger.LogInformation("Все группы были обновлены!");
@@ -115,7 +115,7 @@ public class CacheScheduledTaskProcessor
 
         Logger.LogInformation("Кэш обновлен успешно");
         InProgress = false;
-        NextRun = DateTime.Now.AddHours(Configuration.GetValue<int>("Cache:UpdatePerHours"));
+        NextRun = DateTime.Now.AddHours(Config.Cache.UpdatePerHours);
         foreach (var id in OperationStatus.UsersBotIsAvailable)
             Api.SendMessage(PhraseFramework.BotIsAvailableAgain, null, id);
 
@@ -125,23 +125,23 @@ public class CacheScheduledTaskProcessor
 
 public class CacheScheduledTask : BackgroundService
 {
-    public CacheScheduledTask(IConfiguration configuration, CacheScheduledTaskProcessor cacheScheduledTaskProcessor)
+    public CacheScheduledTask(CacheScheduledTaskProcessor cacheScheduledTaskProcessor)
     {
-        Configuration = configuration;
         CacheScheduledTaskProcessor = cacheScheduledTaskProcessor;
+        Config = EnvironmentConfiguration.GetInstance().Configuration;
         Timer = null!;
     }
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Local
     private Timer Timer { get; set; }
 
-    private IConfiguration Configuration { get; }
     private CacheScheduledTaskProcessor CacheScheduledTaskProcessor { get; }
+    private Config Config { get; }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var hours = long.Parse(Configuration["Cache:UpdatePerHours"]);
-        var updateAtStart = Configuration.GetValue<bool>("Cache:UpdateAtStart");
+        var hours = Config.Cache.UpdatePerHours;
+        var updateAtStart = Config.Cache.UpdateAtStart;
         CacheScheduledTaskProcessor.NextRun = updateAtStart ? DateTime.Now : DateTime.Now.AddHours(hours);
         Timer = new Timer(CacheScheduledTaskProcessor.UpdateCache, stoppingToken,
             updateAtStart ? TimeSpan.Zero : TimeSpan.FromHours(hours),

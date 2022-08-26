@@ -1,9 +1,9 @@
-﻿using nng.Enums;
-using nng_bot.API;
+﻿using nng_bot.API;
 using nng_bot.Exceptions;
 using nng_bot.Extensions;
 using nng_bot.Frameworks;
 using nng_bot.Models;
+using nng.Enums;
 using static nng_bot.Configs.UsersConfigurationProcessor;
 using static nng_bot.API.KeyBoardFramework;
 

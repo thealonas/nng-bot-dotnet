@@ -11,7 +11,7 @@ public class DialogEntry
     private readonly VkDialogAdminHandler _adminHandler;
     private readonly CacheFramework _cacheFramework;
 
-    private readonly IConfiguration _configuration;
+    private readonly EnvironmentConfiguration _configuration;
 
     private readonly VkDialogHelper _dialogHelper;
     private readonly VkDialogPayloadHandler _payloadHandler;
@@ -21,13 +21,13 @@ public class DialogEntry
     private readonly VkDialogUnbanRequests _unbanHandler;
     private readonly VkController _vkController;
 
-    public DialogEntry(OperationStatus status, VkController vkController, IConfiguration configuration,
-        VkDialogUnbanRequests unbanHandler, VkDialogAdminHandler adminHandler, VkDialogPayloadHandler payloadHandler,
-        VkDialogHelper dialogHelper, PhraseFramework phraseFramework, CacheFramework cacheFramework)
+    public DialogEntry(OperationStatus status, VkController vkController, VkDialogUnbanRequests unbanHandler,
+        VkDialogAdminHandler adminHandler, VkDialogPayloadHandler payloadHandler, VkDialogHelper dialogHelper,
+        PhraseFramework phraseFramework, CacheFramework cacheFramework)
     {
         _status = status;
         _vkController = vkController;
-        _configuration = configuration;
+        _configuration = EnvironmentConfiguration.GetInstance();
         _unbanHandler = unbanHandler;
         _adminHandler = adminHandler;
         _payloadHandler = payloadHandler;
@@ -91,7 +91,7 @@ public class DialogEntry
                 break;
 
             case PayloadTemplates.GiveEditorPayload:
-                if (!_configuration.GetValue<bool>("EditorGrantEnabled"))
+                if (!_configuration.Configuration.EditorGrantEnabled)
                 {
                     _vkController.SendMessage(_phraseFramework.NoAvailableSlots,
                         GoToMenuButtons, user);

@@ -1,9 +1,9 @@
-﻿using nng.Enums;
-using nng_bot.API;
+﻿using nng_bot.API;
 using nng_bot.Enums;
 using nng_bot.Exceptions;
 using nng_bot.Frameworks;
 using nng_bot.Models;
+using nng.Enums;
 using Sentry;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Exception;
@@ -15,18 +15,18 @@ namespace nng;
 public class VkDialogPayloadHandler
 {
     private readonly CacheFramework _cacheFramework;
-    private readonly IConfiguration _configuration;
     private readonly VkController _controller;
     private readonly VkDialogHelper _helper;
 
     private readonly ILogger<VkDialogPayloadHandler> _logger;
+    private readonly long _logUser;
     private readonly PhraseFramework _phraseFramework;
 
     private readonly OperationStatus _status;
 
     public VkDialogPayloadHandler(CacheFramework cacheFramework, VkController controller,
         PhraseFramework phraseFramework, VkDialogHelper helper, OperationStatus status,
-        ILogger<VkDialogPayloadHandler> logger, IConfiguration configuration)
+        ILogger<VkDialogPayloadHandler> logger)
     {
         _cacheFramework = cacheFramework;
         _controller = controller;
@@ -34,7 +34,7 @@ public class VkDialogPayloadHandler
         _helper = helper;
         _status = status;
         _logger = logger;
-        _configuration = configuration;
+        _logUser = EnvironmentConfiguration.GetInstance().Configuration.LogUser;
     }
 
     public void GiveEditor(long user)
@@ -314,6 +314,6 @@ public class VkDialogPayloadHandler
 
         _controller.SendMessage(_phraseFramework.UnbanRequestSent, GoToMenuButtons,
             user);
-        _controller.SendMessage(_phraseFramework.NewUnbanRequest(user), null, _configuration.GetValue<long>("LogUser"));
+        _controller.SendMessage(_phraseFramework.NewUnbanRequest(user), null, _logUser);
     }
 }
