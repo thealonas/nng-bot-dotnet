@@ -182,10 +182,10 @@ public class VkDialogAdminHandler
             return;
         }
 
-        _cacheScheduledTaskProcessor.ForceUpdateCache();
-
         _vkController.SendMessage(_phraseFramework.CacheCleaningStarted, GoToMenuButtons,
             user);
+
+        _cacheScheduledTaskProcessor.ForceUpdateCache();
     }
 
     public void GetStatistics(long user)

@@ -55,9 +55,12 @@ public class CacheScheduledTaskProcessor
 
     public void UpdateCache(object? state)
     {
+        Logger.LogDebug("[58] OperationStatus.UsersBotIsAvailable.Count: {Count}",
+            OperationStatus.UsersBotIsAvailable.Count);
+
         CacheFramework.CheckCache(CacheFramework.CacheFilePath);
         CacheFramework.CheckCache(CacheFramework.BannedUserFilePath);
-        var data = DataHelper.GetData(Config.DataUrl);
+        var data = DataHelper.GetDataAsync(Config.DataUrl).GetAwaiter().GetResult();
 
         var groups = data.GroupList.ToList();
 
@@ -80,6 +83,10 @@ public class CacheScheduledTaskProcessor
         OperationStatus.AdminUnbanRequestPages.Clear();
         OperationStatus.UsersAskedForEditor.Clear();
         OperationStatus.LimitlessLimit.Clear();
+        OperationStatus.UsersBotIsAvailable.Clear();
+
+        Logger.LogDebug("[87] OperationStatus.UsersBotIsAvailable.Count: {Count}",
+            OperationStatus.UsersBotIsAvailable.Count);
 
         foreach (var group in groups)
         {
