@@ -28,7 +28,7 @@ public class VkDialogHelper
 
     public bool CheckIfBanned(UserProfile profile)
     {
-        return (profile.Banned && !profile.Deleted) || IfUserIsBannedInBot(profile.Id);
+        return profile.Banned && !profile.Deleted;
     }
 
     public void SendErrorMessage(long user, string error = "")

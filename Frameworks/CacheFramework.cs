@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
 using nng_bot.API;
-using nng_bot.Configs;
 using nng_bot.Enums;
 using nng_bot.Exceptions;
 using nng_bot.Models;
@@ -16,6 +15,7 @@ namespace nng_bot.Frameworks;
 public class CacheFramework
 {
     public const string CacheFilePath = "cache/cache.json";
+    public const string UsersFilePath = "cache/users.json";
     public const string BannedUserFilePath = "cache/banned_users_requests.json";
 
     private readonly ILogger<CacheFramework> _logger;
@@ -133,7 +133,7 @@ public class CacheFramework
             DateFormatHandling = DateFormatHandling.IsoDateFormat
         };
         var serializeObject = JsonConvert.SerializeObject(data, settings);
-        File.WriteAllText(CacheFilePath, serializeObject, Encoding.Default);
+        File.WriteAllText(path, serializeObject, Encoding.Default);
     }
 
     private static T LoadData<T>(string path)
@@ -151,19 +151,29 @@ public class CacheFramework
         return true;
     }
 
-    private static IEnumerable<long> GetBannedInConfiguration()
-    {
-        return UsersConfigurationProcessor.UsersConfiguration.BannedUsers;
-    }
-
     public static void SaveCache(CacheData data)
     {
         SaveData(data, CacheFilePath);
     }
 
+    public static void SaveUsers(CachedUsers data)
+    {
+        SaveData(data, UsersFilePath);
+    }
+
     public static CacheData LoadCache()
     {
         return LoadData<CacheData>(CacheFilePath);
+    }
+
+    public static CachedUsers LoadUsers()
+    {
+        return LoadData<CachedUsers>(UsersFilePath);
+    }
+
+    public void Clear()
+    {
+        _names.Clear();
     }
 
     public bool IfCacheValid()
@@ -183,8 +193,7 @@ public class CacheFramework
     {
         try
         {
-            return (LoadCache().BannedUsers.Any(x => x.Id == user && x.Deleted == null) ||
-                    GetBannedInConfiguration().Any(x => x == user)) && !Status.IfUserIsUnbanned(user);
+            return LoadUsers().BannedUsers.Any(x => x.Id == user && !x.Deleted) && !Status.IfUserIsUnbanned(user);
         }
         catch (ArgumentNullException)
         {
@@ -198,24 +207,15 @@ public class CacheFramework
         {
             priority = BanPriority.White;
 
-            var bannedInBot = GetBannedInConfiguration().ToList();
-            if (bannedInBot.Contains(user))
-            {
-                priority = BanPriority.Local;
-                return true;
-            }
-
             if (Status.IfUserIsUnbanned(user)) return false;
 
-            var bannedUser = LoadCache().BannedUsers.FirstOrDefault(x => x.Id == user && x.Deleted == null);
+            var bannedUser = LoadUsers().BannedUsers.FirstOrDefault(x => x.Id == user && !x.Deleted);
 
-            if (!bannedUser.Id.Equals(0))
-            {
-                priority = bannedUser.Priority;
-                return true;
-            }
+            if (bannedUser.Id.Equals(0)) return false;
 
-            return false;
+            priority = bannedUser.Priority;
+            if (bannedUser.BotBan) priority = BanPriority.Local;
+            return true;
         }
         catch (ArgumentNullException)
         {
@@ -249,32 +249,38 @@ public class CacheFramework
     {
         var profile = new UserProfile {Id = id, CreatedOn = GetAccountAge(id)};
         var cache = LoadCache();
-        try
+        var users = LoadUsers();
+
+        if (users.BannedUsers.Any(x => x.Id == id))
         {
-            var userObject = cache.BannedUsers.First(x => x.Id == id);
+            var userObject = users.BannedUsers.First(x => x.Id == id);
             profile.Banned = true;
             profile.BanPriority = userObject.Priority;
-            profile.Deleted = userObject.Deleted != null;
+            profile.Deleted = userObject.Deleted;
             profile.Name = userObject.Name;
+            profile.BannedInBot = userObject.BotBan;
         }
-        catch (Exception)
+        else if (users.PriorityUsers.Any(x => x.Id == id))
+        {
+            var priorityUser = users.PriorityUsers.First(x => x.Id == id);
+            profile.Banned = false;
+            profile.BanPriority = 0;
+            profile.Deleted = false;
+            profile.Name = priorityUser.Name;
+            profile.BannedInBot = false;
+        }
+        else
         {
             profile.Banned = false;
             profile.Deleted = false;
+            profile.BannedInBot = false;
             profile.BanPriority = 0;
             profile.Name = GetName(id);
             if (!_names.ContainsKey(id)) _names.Add(id, profile.Name);
         }
 
-        if (GetBannedInConfiguration().Any(x => x == id))
-        {
-            profile.Banned = true;
-            profile.BanPriority = BanPriority.Local;
-            profile.Deleted = false;
-        }
-
         profile.Warnings = 0;
-        var relativeUsers = cache.BannedUsers.Where(x => x.Id == id).ToList();
+        var relativeUsers = users.BannedUsers.Where(x => x.Id == id).ToList();
         if (relativeUsers.Any()) profile.Warnings = relativeUsers.First().Warnings;
 
         profile.EditorGroups = cache.Data.Where(group => group.Managers.Any(x => x.Equals(profile.Id)))

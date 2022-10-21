@@ -12,11 +12,6 @@ public static class PhraseStrings
         return str.SetBase("{ID}", val);
     }
 
-    public static string SetNew(this string str, object val)
-    {
-        return str.SetBase("{New}", val);
-    }
-
     public static string SetDate(this string str, object val)
     {
         return str.SetBase("{Date}", val);
@@ -55,11 +50,6 @@ public static class PhraseStrings
     public static string SetProfile(this string str, object val)
     {
         return str.SetBase("{Profile}", val);
-    }
-
-    public static string SetCurrent(this string str, object val)
-    {
-        return str.SetBase("{Current}", val);
     }
 
     public static string SetOldRequest(this string str, object val)

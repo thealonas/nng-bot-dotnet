@@ -21,13 +21,9 @@ public static class PayloadAdminActions
 {
     public const string AdminPanel = "{\"command\":\"AdminPanel\"}";
     public const string ClearCache = "{\"command\":\"ClearCache\"}";
-    public const string BanUser = "{\"command\":\"BanUser\"}";
-    public const string MakeUserAdmin = "{\"command\":\"MakeUserAdmin\"}";
-    public const string MakeUserLimitless = "{\"command\":\"MakeUserLimitless\"}";
-    public const string EditEditorRestriction = "{\"command\":\"EditEditorRestriction\"}";
+    public const string ClearBanned = "{\"command\":\"ClearBanned\"}";
     public const string ShowOtherUserProfile = "{\"command\":\"ShowOtherUserProfile\"}";
     public const string GroupsStatistics = "{\"command\":\"GroupsStatistics\"}";
-    public const string LimitPanel = "{\"command\":\"Limits\"}";
     public const string UnbanRequests = "{\"command\":\"UnbanRequests\"}";
     public const string UnbanRequestMoveForward = "{\"command\":\"UnbanRequestMoveForward\"}";
     public const string UnbanRequestMoveBack = "{\"command\":\"UnbanRequestMoveBack\"}";
@@ -39,11 +35,9 @@ public static class PayloadAdminActions
     {
         var payloads = new List<string>
         {
-            AdminPanel, ClearCache, BanUser,
-            MakeUserAdmin, MakeUserLimitless, EditEditorRestriction, ShowOtherUserProfile, GroupsStatistics,
-            LimitPanel, UnbanRequests, UnbanRequestMoveForward, UnbanRequestMoveBack, UnbanRequestAccept,
-            UnbanRequestDeny,
-            UnbanRequestDelete
+            AdminPanel, ClearCache, ClearBanned, ShowOtherUserProfile, GroupsStatistics,
+            UnbanRequests, UnbanRequestMoveForward, UnbanRequestMoveBack,
+            UnbanRequestAccept, UnbanRequestDeny, UnbanRequestDelete
         };
         return payloads.Any(x => payload == x);
     }
@@ -227,41 +221,6 @@ public static class KeyBoardFramework
         }
     }
 
-    public static string AdminLimitsButtons
-    {
-        get
-        {
-            var keyboard = new KeyboardBuilder();
-            keyboard.SetOneTime();
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Default,
-                Extra = "EditEditorRestriction",
-                Type = CommandButtonType,
-                Label = "Группы"
-            });
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Default,
-                Extra = "MakeUserLimitless",
-                Type = CommandButtonType,
-                Label = "Юзеры"
-            });
-            keyboard.AddLine();
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Primary,
-                Extra = "AdminPanel",
-                Type = CommandButtonType,
-                Label = "Вернуться назад"
-            });
-            return JsonConvert.SerializeObject(keyboard.Build());
-        }
-    }
-
     public static string AdminPanelButtons
     {
         get
@@ -276,30 +235,13 @@ public static class KeyBoardFramework
                 Type = CommandButtonType,
                 Label = "Очистить кэш"
             });
-            keyboard.AddLine();
             keyboard.AddButton(new AddButtonParams
             {
                 ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Default,
-                Extra = "BanUser",
+                Color = KeyboardButtonColor.Primary,
+                Extra = "ClearBanned",
                 Type = CommandButtonType,
-                Label = "Забаненные"
-            });
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Default,
-                Extra = "MakeUserAdmin",
-                Type = CommandButtonType,
-                Label = "Админы"
-            });
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Default,
-                Extra = "Limits",
-                Type = CommandButtonType,
-                Label = "Лимиты"
+                Label = "Обновить дату"
             });
             keyboard.AddLine();
             keyboard.AddButton(new AddButtonParams
@@ -332,24 +274,6 @@ public static class KeyBoardFramework
                 ActionType = KeyboardButtonActionType.Text,
                 Color = KeyboardButtonColor.Negative,
                 Extra = "GoToMenuCommand",
-                Type = CommandButtonType,
-                Label = "Вернуться назад"
-            });
-            return JsonConvert.SerializeObject(keyboard.Build());
-        }
-    }
-
-    public static string GoToAdminLimitPanel
-    {
-        get
-        {
-            var keyboard = new KeyboardBuilder();
-            keyboard.SetOneTime();
-            keyboard.AddButton(new AddButtonParams
-            {
-                ActionType = KeyboardButtonActionType.Text,
-                Color = KeyboardButtonColor.Negative,
-                Extra = "Limits",
                 Type = CommandButtonType,
                 Label = "Вернуться назад"
             });

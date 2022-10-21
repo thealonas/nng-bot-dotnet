@@ -39,6 +39,13 @@ public class EnvironmentConfiguration
             dialogGroupConfirm);
         var configCache = new CacheConfig(cacheUpdateAtStart, cacheUpdatePerHours);
 
-        return new Config(dataUrl, editorGrant, logUser, configAuth, configCache);
+        var users = new UsersConfig
+        {
+            AdminUsers = EnvironmentHelper.GetString("AdminUsers").Split(",").Select(long.Parse).ToList(),
+            EditorRestriction = EnvironmentHelper.GetInt("EditorRestriction", 20),
+            GroupManagersCeiling = EnvironmentHelper.GetInt("GroupManagersCeiling", 100)
+        };
+
+        return new Config(dataUrl, editorGrant, logUser, configAuth, configCache, users);
     }
 }

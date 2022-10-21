@@ -9,11 +9,10 @@ public partial class PhraseFramework
     public string AreYouSureYouWantToSendUnbanRequest => GetPhrase("AreYouSureYouWantToSendUnbanRequest");
     public string BotIsAvailableAgain => GetPhrase("BotIsAvailableAgain");
     public string CacheCleaningStarted => GetPhrase("CacheCleaningStarted");
+    public string DataUpdatingStarted => GetPhrase("DataUpdatingStarted");
     public string CacheIsAboutToUpdateItself => GetPhrase("CacheIsAboutToUpdateItself");
-
     public string CommandNotFound => GetPhrase("CommandNotFound");
     public string EditorAfterFiftySubs => GetPhrase("EditorAfterFiftySubs");
-    public string LimitPanel => GetPhrase("LimitPanel");
     public string LimitReached => GetPhrase("LimitReached");
     public string MainMenu => GetPhrase("MainMenu");
     public string NoAvailableSlots => GetPhrase("NoAvailableSlots");
@@ -44,11 +43,6 @@ public partial class PhraseFramework
     public string DeletedUnbanRequests(string data)
     {
         return GetPhrase("DeletedUnbanRequests").SetCount(data);
-    }
-
-    public string EditorRestrictionChanged(long newLimit)
-    {
-        return GetPhrase("EditorRestrictionChanged").SetNew(newLimit);
     }
 
     public string EditorSuccess(string id)
@@ -93,94 +87,14 @@ public partial class PhraseFramework
         return GetPhrase("UnbanRequestOverview").SetTime(time).SetStatus(status);
     }
 
-    public string UserAlreadyAdmin(long id)
-    {
-        return GetPhrase("UserAlreadyAdmin").SetId(id);
-    }
-
-    public string UserAlreadyBanned(long id)
-    {
-        return GetPhrase("UserAlreadyBanned").SetId(id);
-    }
-
-    public string UserAlreadyLimitless(long id)
-    {
-        return GetPhrase("UserAlreadyLimitless").SetId(id);
-    }
-
-    public string UserBannedSuccessfully(long id)
-    {
-        return GetPhrase("UserBannedSuccessfully").SetId(id);
-    }
-
     public string UserHasBeenUnbanned(long id)
     {
         return GetPhrase("UserHasBeenUnbanned").SetId(id);
     }
 
-    public string UserIsNotAdmin(long id)
-    {
-        return GetPhrase("UserIsNotAdmin").SetId(id);
-    }
-
-    public string UserIsNotBanned(long id)
-    {
-        return GetPhrase("UserIsNotBanned").SetId(id);
-    }
-
-    public string UserIsNotLimitless(long id)
-    {
-        return GetPhrase("UserIsNotLimitless").SetId(id);
-    }
-
-    public string UserMadeAdminSuccessfully(long id)
-    {
-        return GetPhrase("UserMadeAdminSuccessfully").SetId(id);
-    }
-
-    public string UserMadeLimitlessSuccessfully(long id)
-    {
-        return GetPhrase("UserMadeLimitlessSuccessfully").SetId(id);
-    }
-
-    public string UserRemovedFromAdminSuccessfully(long id)
-    {
-        return GetPhrase("UserRemovedFromAdminSuccessfully").SetId(id);
-    }
-
-    public string UserRemovedFromLimitlessSuccessfully(long id)
-    {
-        return GetPhrase("UserRemovedFromLimitlessSuccessfully").SetId(id);
-    }
-
     public string UserRequestHasBeenRejected(long id)
     {
         return GetPhrase("UserRequestHasBeenRejected").SetId(id);
-    }
-
-    public string UserUnbannedSuccessfully(long id)
-    {
-        return GetPhrase("UserUnbannedSuccessfully").SetId(id);
-    }
-
-    public string WriteDownAdminUserId(string current)
-    {
-        return GetPhrase("WriteDownAdminUserId").SetCurrent(current);
-    }
-
-    public string WriteDownBanUserId(string current)
-    {
-        return GetPhrase("WriteDownBanUserId").SetCurrent(current);
-    }
-
-    public string WriteDownLimitlessUserId(string current)
-    {
-        return GetPhrase("WriteDownLimitlessUserId").SetCurrent(current);
-    }
-
-    public string WriteDownNewRestriction(long current)
-    {
-        return GetPhrase("WriteDownNewRestriction").SetCurrent(current);
     }
 
     public string YouCanSendAnotherUnbanRequest(string oldRequest)

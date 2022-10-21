@@ -36,11 +36,11 @@ public class VkController
         VkFramework.EditManager(user, group, role);
     }
 
-    public void SendMessage(string? message, string? keyboard, long peer)
+    public void SendMessage(string? message, string? keyboard, long peer, bool doNotParseLinks = true)
     {
         try
         {
-            VkFrameworkHttp.SendMessage(message, keyboard, peer);
+            VkFrameworkHttp.SendMessage(message, keyboard, peer, doNotParseLinks);
         }
         catch (VkApiException e)
         {

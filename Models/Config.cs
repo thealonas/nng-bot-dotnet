@@ -2,13 +2,15 @@
 
 public class Config
 {
-    public Config(string dataUrl, bool editorGrantEnabled, long logUser, AuthConfig auth, CacheConfig cache)
+    public Config(string dataUrl, bool editorGrantEnabled, long logUser, AuthConfig auth, CacheConfig cache,
+        UsersConfig users)
     {
         DataUrl = dataUrl;
         EditorGrantEnabled = editorGrantEnabled;
         LogUser = logUser;
         Auth = auth;
         Cache = cache;
+        Users = users;
     }
 
     public string DataUrl { get; }
@@ -16,6 +18,7 @@ public class Config
     public long LogUser { get; }
     public AuthConfig Auth { get; }
     public CacheConfig Cache { get; }
+    public UsersConfig Users { get; }
 }
 
 public class AuthConfig

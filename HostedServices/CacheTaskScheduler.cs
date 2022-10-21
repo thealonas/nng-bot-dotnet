@@ -53,6 +53,19 @@ public class CacheScheduledTaskProcessor
         UpdateCache(default);
     }
 
+    public void ForceUpdateData()
+    {
+        if (OperationStatus.BackingTaskInProgress || !IsInstantUpdateAvailable)
+        {
+            Logger.LogWarning("Кэш уже обновляется");
+            return;
+        }
+
+        Logger.LogInformation("Запуск принудительного обновления даты…");
+        CacheFramework.DeleteCache(CacheFramework.UsersFilePath);
+        UpdateBanned(DataHelper.GetDataAsync(Config.DataUrl).GetAwaiter().GetResult());
+    }
+
     public void UpdateCache(object? state)
     {
         Logger.LogDebug("[58] OperationStatus.UsersBotIsAvailable.Count: {Count}",
@@ -74,7 +87,7 @@ public class CacheScheduledTaskProcessor
         Logger.LogInformation("Начинаем обновлять кэш…");
         InProgress = true;
 
-        var saveData = new CacheData(new List<CacheGroup>(), new List<UserModel>(), DateTime.Now);
+        var saveData = new CacheData(new List<CacheGroup>(), DateTime.Now);
 
         OperationStatus.CoolDownUsers.Clear();
         OperationStatus.UnbannedUsers.Clear();
@@ -104,21 +117,19 @@ public class CacheScheduledTaskProcessor
         }
 
         Logger.LogInformation("Все группы были обновлены!");
-        Logger.LogInformation("Обновляем список забаненных…");
-
-        var users = data.Users.ToList();
-
-        saveData.BannedUsers = users;
-        Logger.LogInformation("Список забаненных обновлен!");
 
         saveData.CreatedOn = DateTime.Now;
         CacheFramework.SaveCache(saveData);
+
+        UpdateBanned(data);
 
         Logger.LogInformation("Обновляем диалоги для статуса…");
         var count = _framework.GetConversationsCount();
         Logger.LogInformation("Количество диалогов для статуса: {Count}", count);
         _framework.UpdateStatus(count);
         Logger.LogInformation("Статус обновлен");
+
+        CacheFramework.Clear();
 
         Logger.LogInformation("Кэш обновлен успешно");
         InProgress = false;
@@ -127,6 +138,17 @@ public class CacheScheduledTaskProcessor
             Api.SendMessage(PhraseFramework.BotIsAvailableAgain, null, id);
 
         OperationStatus.UsersBotIsAvailable.Clear();
+    }
+
+    private void UpdateBanned(DataModel data)
+    {
+        Logger.LogInformation("Обновляем список забаненных…");
+
+        var users = data.Users.ToList();
+        var priority = data.PriorityUsers.ToList();
+        CacheFramework.SaveUsers(new CachedUsers(users, priority, DateTime.Now));
+
+        Logger.LogInformation("Список забаненных обновлен!");
     }
 }
 

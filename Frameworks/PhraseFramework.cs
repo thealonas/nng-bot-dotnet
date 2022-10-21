@@ -27,7 +27,8 @@ public partial class PhraseFramework
         else
         {
             if (profile.Warnings > 0) ban += $"‼️ Количетсво жалоб: {profile.Warnings}\n";
-            ban += $"💥 Статус блокировки: Заблокирован — {profile.BanPriority.GetName()}";
+            if (profile.BannedInBot) ban += "💥 Статус блокировки: Заблокирован — в боте";
+            else ban += $"💥 Статус блокировки: Заблокирован — {profile.BanPriority.GetName()}";
         }
 
         string editor;

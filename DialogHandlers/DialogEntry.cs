@@ -75,12 +75,12 @@ public class DialogEntry
 
         switch (message.Payload)
         {
-            case PayloadTemplates.ReturnBack:
             case PayloadTemplates.StartDialog:
+            case PayloadTemplates.ReturnBack:
                 if (_status.UsersToEditorGiving.Any(x => x.User == user))
                     _status.UsersToEditorGiving.RemoveWhere(x => x.User == user);
-                _vkController.SendMessage(_phraseFramework.MainMenu,
-                    _dialogHelper.GetStartMenuKeyboard(user), user);
+
+                _vkController.SendMessage(_phraseFramework.MainMenu, _dialogHelper.GetStartMenuKeyboard(user), user);
                 break;
 
             case PayloadTemplates.MyProfile:
@@ -108,11 +108,6 @@ public class DialogEntry
                     AgreeWithRulesButtons, user);
                 break;
 
-            case PayloadAdminActions.LimitPanel:
-                _vkController.SendMessage(_phraseFramework.LimitPanel,
-                    AdminLimitsButtons, user);
-                break;
-
             case PayloadTemplates.UnbanMe:
                 _payloadHandler.SubmitUnBanRequest(user);
                 break;
@@ -137,18 +132,6 @@ public class DialogEntry
                 _adminHandler.PanelEnter(user);
                 break;
 
-            case PayloadAdminActions.BanUser:
-                _adminHandler.BanUser(user);
-                break;
-
-            case PayloadAdminActions.MakeUserAdmin:
-                _adminHandler.MakeAdmin(user);
-                break;
-
-            case PayloadAdminActions.MakeUserLimitless:
-                _adminHandler.MakeLimitless(user);
-                break;
-
             case PayloadAdminActions.GroupsStatistics:
                 _adminHandler.GetStatistics(user);
                 break;
@@ -157,8 +140,8 @@ public class DialogEntry
                 _adminHandler.ClearCache(user);
                 break;
 
-            case PayloadAdminActions.EditEditorRestriction:
-                _adminHandler.EditEditorRestrictions(user);
+            case PayloadAdminActions.ClearBanned:
+                _adminHandler.ClearBanned(user);
                 break;
 
             case PayloadAdminActions.ShowOtherUserProfile:
