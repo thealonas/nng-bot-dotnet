@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace nng_bot.Models;
+namespace nng;
 
 public struct CacheGroup
 {

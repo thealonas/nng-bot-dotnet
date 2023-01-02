@@ -3,6 +3,7 @@ using nng_bot.Frameworks;
 using nng_bot.Models;
 using nng.Helpers;
 using nng.Models;
+using Sentry;
 using VkNet.Exception;
 
 namespace nng;
@@ -68,12 +69,19 @@ public class CacheScheduledTaskProcessor
 
     public void UpdateCache(object? state)
     {
-        Logger.LogDebug("[58] OperationStatus.UsersBotIsAvailable.Count: {Count}",
-            OperationStatus.UsersBotIsAvailable.Count);
-
         CacheFramework.CheckCache(CacheFramework.CacheFilePath);
         CacheFramework.CheckCache(CacheFramework.BannedUserFilePath);
-        var data = DataHelper.GetDataAsync(Config.DataUrl).GetAwaiter().GetResult();
+        var data = new DataModel(Array.Empty<long>(), Array.Empty<UserModel>(), Array.Empty<UserModelShort>());
+
+        try
+        {
+            data = DataHelper.GetDataAsync(Config.DataUrl).GetAwaiter().GetResult();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Ошибка при получении данных");
+            SentrySdk.CaptureException(e);
+        }
 
         var groups = data.GroupList.ToList();
 
@@ -97,9 +105,6 @@ public class CacheScheduledTaskProcessor
         OperationStatus.UsersAskedForEditor.Clear();
         OperationStatus.LimitlessLimit.Clear();
         OperationStatus.UsersBotIsAvailable.Clear();
-
-        Logger.LogDebug("[87] OperationStatus.UsersBotIsAvailable.Count: {Count}",
-            OperationStatus.UsersBotIsAvailable.Count);
 
         foreach (var group in groups)
         {

@@ -1,5 +1,7 @@
-﻿using nng_bot.Configs;
+﻿using nng;
+using nng_bot.Configs;
 using nng_bot.Enums;
+using nng_bot.Extensions;
 using nng_bot.Models;
 
 namespace nng_bot.Frameworks;
@@ -82,6 +84,7 @@ public partial class PhraseFramework
 
     private string GetPhrase(string name)
     {
-        return Configuration[$"Phrases:{name}"];
+        var target = Configuration[$"Phrases:{name}"];
+        return target ?? string.Empty;
     }
 }

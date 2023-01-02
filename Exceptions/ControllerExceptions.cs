@@ -1,4 +1,4 @@
-﻿using nng_bot.Models;
+﻿using nng;
 
 namespace nng_bot.Exceptions;
 

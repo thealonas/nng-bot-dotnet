@@ -1,5 +1,5 @@
-﻿using nng_bot.Extensions;
-using nng_bot.Models;
+﻿using nng;
+using nng_bot.Extensions;
 
 namespace nng_bot.API;
 

@@ -1,4 +1,5 @@
-﻿using nng_bot.Frameworks;
+﻿using nng;
+using nng_bot.Frameworks;
 using nng_bot.Models;
 using nng.VkFrameworks;
 using VkNet;

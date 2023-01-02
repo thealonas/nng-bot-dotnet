@@ -2,12 +2,12 @@
 using nng;
 using nng_bot.Frameworks;
 using nng_bot.Models;
+using Sentry;
 using VkNet.Model;
 using VkNet.Utils;
 
 namespace nng_bot.Controllers;
 
-[ApiController]
 [Route("")]
 public class EditorController : Controller
 {
@@ -38,11 +38,23 @@ public class EditorController : Controller
             case "message_new":
             {
                 var message = Message.FromJson(new VkResponse(vkEvent.Object));
-                Task.Run(() => _entryPoint.Enter(message));
+                Task.Run(() => RunDialog(message));
                 break;
             }
         }
 
         return Ok("ok");
+    }
+
+    private void RunDialog(Message message)
+    {
+        try
+        {
+            _entryPoint.Enter(message);
+        }
+        catch (Exception e)
+        {
+            SentrySdk.CaptureException(e);
+        }
     }
 }

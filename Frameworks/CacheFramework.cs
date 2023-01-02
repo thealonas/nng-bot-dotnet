@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using nng;
 using nng_bot.API;
 using nng_bot.Enums;
 using nng_bot.Exceptions;

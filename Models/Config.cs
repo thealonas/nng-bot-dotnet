@@ -1,4 +1,6 @@
-﻿namespace nng_bot.Models;
+﻿using nng;
+
+namespace nng_bot.Models;
 
 public class Config
 {

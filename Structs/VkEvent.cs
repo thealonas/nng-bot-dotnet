@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace nng_bot.Models;
+namespace nng;
 
 [Serializable]
 public struct VkEvent

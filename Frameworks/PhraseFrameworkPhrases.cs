@@ -1,4 +1,4 @@
-﻿using nng_bot.Models;
+﻿using nng;
 
 namespace nng_bot.Frameworks;
 
@@ -19,7 +19,7 @@ public partial class PhraseFramework
     public string NoBannedRequests => GetPhrase("NoBannedRequests");
     public string TempUnavailable => GetPhrase("TempUnavailable");
     public string UnbanRequestSent => GetPhrase("UnbanRequestSent");
-    public string UserIdIsNotInteger => GetPhrase("UserIdIsNotInteger");
+    public string CannotFindUserId => GetPhrase("CannotFindUserId");
     public string WriteDownUserIdToShowHisProfile => GetPhrase("WriteDownUserIdToShowHisProfile");
     public string YouAreOnCoolDown => GetPhrase("YouAreOnCoolDown");
     public string YouHaveBeenUnbanned => GetPhrase("YouHaveBeenUnbanned");
@@ -97,7 +97,7 @@ public partial class PhraseFramework
         return GetPhrase("UserRequestHasBeenRejected").SetId(id);
     }
 
-    public string YouCanSendAnotherUnbanRequest(string oldRequest)
+    public string YouCanSendAnotherUnbanRequest(object oldRequest)
     {
         return GetPhrase("YouCanSendAnotherUnbanRequest").SetOldRequest(oldRequest);
     }

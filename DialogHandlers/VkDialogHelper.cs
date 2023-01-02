@@ -26,11 +26,6 @@ public class VkDialogHelper
         _cacheFramework = cacheFramework;
     }
 
-    public bool CheckIfBanned(UserProfile profile)
-    {
-        return profile.Banned && !profile.Deleted;
-    }
-
     public void SendErrorMessage(long user, string error = "")
     {
         _vkController.SendMessage(_phraseFramework.Error(error),

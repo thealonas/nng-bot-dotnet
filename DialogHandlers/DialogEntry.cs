@@ -36,6 +36,17 @@ public class DialogEntry
         _cacheFramework = cacheFramework;
     }
 
+    private bool TryGetAdminRequest(long user, out AdminRequest request)
+    {
+        request = new AdminRequest();
+
+        if (!_status.AdminRequests.Any(x => x.Admin == user && x.IsValid)) return false;
+
+        request = _status.AdminRequests.First(x => x.Admin == user && x.IsValid);
+
+        return true;
+    }
+
     public void Enter(Message message)
     {
         if (message.FromId is null) throw new NullReferenceException("FromId is null");
@@ -49,14 +60,15 @@ public class DialogEntry
             return;
         }
 
-        try
+        if (TryGetAdminRequest(user, out var request))
         {
-            _adminHandler.AdminRequestMain(user, message);
-            return;
-        }
-        catch (InvalidOperationException)
-        {
-            // ignored
+            if (message.Payload != PayloadAdminActions.AdminPanel)
+            {
+                _adminHandler.SendProfileInfo(user, message, request);
+                return;
+            }
+
+            _status.AdminRequests.Remove(request);
         }
 
         if (message.Payload == null)
@@ -75,6 +87,8 @@ public class DialogEntry
 
         switch (message.Payload)
         {
+            #region Regular
+
             case PayloadTemplates.StartDialog:
             case PayloadTemplates.ReturnBack:
                 if (_status.UsersToEditorGiving.Any(x => x.User == user))
@@ -128,6 +142,10 @@ public class DialogEntry
                 _payloadHandler.JoinedLessThanFiftySubs(user);
                 break;
 
+            #endregion
+
+            #region AdminRequests
+
             case PayloadAdminActions.AdminPanel:
                 _adminHandler.PanelEnter(user);
                 break;
@@ -147,6 +165,8 @@ public class DialogEntry
             case PayloadAdminActions.ShowOtherUserProfile:
                 _adminHandler.ShowUserProfile(user);
                 break;
+
+            #endregion
 
             #region UnbanRequests
 

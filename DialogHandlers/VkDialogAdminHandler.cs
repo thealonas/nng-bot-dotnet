@@ -2,6 +2,9 @@
 using nng_bot.API;
 using nng_bot.Frameworks;
 using nng_bot.Models;
+using nng.VkFrameworks;
+using VkNet.Enums;
+using VkNet.Exception;
 using VkNet.Model;
 using static nng_bot.Configs.UsersConfigurationProcessor;
 using static nng_bot.API.KeyBoardFramework;
@@ -27,9 +30,38 @@ public class VkDialogAdminHandler
         _cacheScheduledTaskProcessor = cacheScheduledTaskProcessor;
     }
 
-    public void AdminRequestMain(long user, Message message)
+    private bool TryGetUserId(string id, out long userId)
     {
-        var adminRequest = _status.AdminRequests.First(x => x.Admin == user);
+        userId = 0;
+        
+        if (string.IsNullOrEmpty(id)) return false;
+        if (long.TryParse(id, out userId) && userId != 0) return true;
+
+        var targetScreenName = id.Trim().ToLower()
+            .Replace("http://", string.Empty)
+            .Replace("https://", string.Empty)
+            .Replace("vk.com/", string.Empty);
+
+        VkObject user;
+
+        try
+        {
+            user = VkFrameworkExecution.ExecuteWithReturn(() =>
+                _vkController.GroupFramework.Utils.ResolveScreenName(targetScreenName));
+        }
+        catch (ParameterMissingOrInvalidException)
+        {
+            return false;
+        }
+
+        if (user?.Type is not VkObjectType.User || user.Id is null) return false;
+
+        userId = user.Id.Value;
+        return true;
+    }
+
+    public void SendProfileInfo(long user, Message message, AdminRequest adminRequest)
+    {
         var keyboard = AdminPanelButtons;
         var returnKeyboard = GoToAdminPanel;
 
@@ -42,43 +74,16 @@ public class VkDialogAdminHandler
         }
 
         var ids = message.Text.Trim().ToLower().Split(',').ToList();
-        ids = ids.Select(x => x.Replace("id", string.Empty)
-            .Replace("https://vk.com/", string.Empty)).ToList();
 
-        var users = new List<long>();
-
-        foreach (var id in ids)
+        if (!ids.Any() || !TryGetUserId(ids.First(), out var outputUser))
         {
-            if (!long.TryParse(id, out var userId)) continue;
-            users.Add(userId);
-        }
-
-        if (!users.Any())
-        {
-            _vkController.SendMessage(_phraseFramework.UserIdIsNotInteger,
-                returnKeyboard, user);
-            _status.AdminRequests.Remove(adminRequest);
+            _vkController.SendMessage(_phraseFramework.CannotFindUserId, returnKeyboard, user);
             return;
         }
 
-        var firstElement = users.First();
-
-        var profileTarget = (int) Math.Abs(firstElement);
-
-        if (profileTarget != 0)
-        {
-            var targetProfile = _cacheFramework.LoadProfile(profileTarget);
-            _vkController.SendMessage(_phraseFramework.FormProfile(targetProfile, IfUserPrioritized(profileTarget)),
-                GoToAdminPanel, user);
-        }
-        else
-        {
-            _vkController.SendMessage(_phraseFramework.UserIdIsNotInteger,
-                returnKeyboard, user);
-            _status.AdminRequests.Remove(adminRequest);
-        }
-
-        _status.AdminRequests.Remove(adminRequest);
+        var targetProfile = _cacheFramework.LoadProfile(outputUser);
+        _vkController.SendMessage(_phraseFramework.FormProfile(targetProfile, IfUserPrioritized(outputUser)),
+            GoToAdminPanel, user);
     }
 
     public void PanelEnter(long user)

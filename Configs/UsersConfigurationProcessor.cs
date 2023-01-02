@@ -1,5 +1,5 @@
-﻿using nng_bot.Frameworks;
-using nng_bot.Models;
+﻿using nng;
+using nng_bot.Frameworks;
 
 namespace nng_bot.Configs;
 

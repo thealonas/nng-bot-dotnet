@@ -1,24 +1,7 @@
-﻿using nng_bot.Frameworks;
+﻿using nng;
+using nng_bot.Frameworks;
 
 namespace nng_bot.Models;
-
-public readonly struct CacheObject
-{
-    public int TotalManagers => Managers.Count;
-    public readonly int TotalMembers;
-
-    public readonly List<long> Members;
-    public readonly List<long> Managers;
-
-    public CacheObject(long group)
-    {
-        var cache = CacheFramework.LoadCache();
-        var groupData = cache.Data.First(x => x.Id == group);
-        Members = groupData.Members;
-        Managers = groupData.Managers;
-        TotalMembers = groupData.MembersTotalCount;
-    }
-}
 
 public class CacheObjectList
 {
@@ -40,7 +23,8 @@ public class CacheObjectList
         TotalMembersWithoutDuplicates = users.Count;
         TotalManagersWithoutDuplicates = managers.Count;
 
-        TotalSlots = CacheObjects.Count * 100;
+        TotalSlots = CacheObjects.Count *
+                     EnvironmentConfiguration.GetInstance().Configuration.Users.GroupManagersCeiling;
         TotalBusySlots = CacheObjects.Select(x => x.TotalManagers).Sum();
     }
 

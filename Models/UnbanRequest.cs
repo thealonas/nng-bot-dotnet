@@ -2,20 +2,6 @@
 
 namespace nng_bot.Models;
 
-public static class UnbanRequestStatusExtensions
-{
-    public static string GetName(this UnbanRequestStatus status)
-    {
-        return status switch
-        {
-            UnbanRequestStatus.Pending => "На рассмотрении",
-            UnbanRequestStatus.Rejected => "Отклонено",
-            UnbanRequestStatus.Accepted => "Принято",
-            _ => "Unknown"
-        };
-    }
-}
-
 public sealed class UnbanRequest : IEquatable<UnbanRequest>
 {
     public UnbanRequest(long userId, DateTime createdOn)

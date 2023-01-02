@@ -51,7 +51,7 @@ public class VkDialogPayloadHandler
 
         if (_helper.CheckIfCooldown(user)) return;
 
-        var banned = _helper.CheckIfBanned(userProfile);
+        var banned = userProfile.CheckIfBanned();
 
         switch (banned)
         {
@@ -152,7 +152,7 @@ public class VkDialogPayloadHandler
             return;
         }
 
-        if (_helper.CheckIfBanned(joinedProfile))
+        if (joinedProfile.CheckIfBanned())
         {
             _controller.SendMessage(_phraseFramework.TempUnavailable,
                 GoToMenuButtons, user);

@@ -1,4 +1,4 @@
-﻿namespace nng_bot.Models;
+﻿namespace nng;
 
 public readonly struct EditorRequest
 {
