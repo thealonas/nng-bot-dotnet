@@ -1,6 +1,4 @@
-﻿using nng;
-using nng_bot.Frameworks;
-using nng_bot.Models;
+﻿using nng_bot.Providers;
 using nng.VkFrameworks;
 using VkNet;
 using VkNet.Enums.SafetyEnums;
@@ -11,26 +9,36 @@ namespace nng_bot.API;
 
 public class VkController
 {
-    public VkController(ILogger<VkController> logger, VkFramework vkFramework,
-        VkFrameworkHttp vkFrameworkHttp)
+    private readonly ConfigurationProvider _configurationProvider;
+    private readonly Random _random;
+    private readonly VkFrameworkProvider _vkFrameworkProvider;
+
+    public VkController(ILogger<VkController> logger, VkFrameworkProvider vkFrameworkProvider,
+        ConfigurationProvider configurationProvider)
     {
+        _vkFrameworkProvider = vkFrameworkProvider;
+        _configurationProvider = configurationProvider;
         Logger = logger;
-        VkFrameworkHttp = vkFrameworkHttp;
-        VkFramework = vkFramework;
+
+        var configuration = configurationProvider.Configuration;
+
+        VkFrameworkHttp = new VkFrameworkHttp(configuration.GroupToken);
 
         GroupFramework = new VkApi();
-        Configuration = EnvironmentConfiguration.GetInstance().Configuration;
         GroupFramework.Authorize(new ApiAuthParams
         {
-            AccessToken = Configuration.Auth.DialogGroupToken
+            AccessToken = configuration.GroupToken
         });
+
+        HttpClient = new HttpClient();
+        _random = new Random();
     }
 
     private VkFrameworkHttp VkFrameworkHttp { get; }
-    private VkFramework VkFramework { get; }
+    public VkFramework VkFramework => _vkFrameworkProvider.VkFramework;
     public VkApi GroupFramework { get; }
     private ILogger<VkController> Logger { get; }
-    private Config Configuration { get; }
+    private HttpClient HttpClient { get; }
 
     public void EditManager(long user, long group, ManagerRole role)
     {
@@ -49,32 +57,40 @@ public class VkController
         }
     }
 
-    public CacheGroup GetGroupInfo(long group)
-    {
-        var returnCache = new CacheGroup
-        {
-            Id = group
-        };
-
-        var data = VkFramework.GetGroupDataLegacy(group);
-        returnCache.Members = data.AllUsers.Select(x => (long) x).ToList();
-        returnCache.Managers = data.Managers.Select(x => x.Id).ToList();
-        returnCache.MembersTotalCount = data.Count;
-        returnCache.ShortName = data.ShortName;
-        returnCache.ManagerTotalCount = data.ManagerCount;
-        return returnCache;
-    }
-
-    public void SetEditorStatus(long count)
+    public void SendSticker(long peer, long stickerId)
     {
         try
         {
-            VkFramework.SetGroupStatus(Configuration.Auth.DialogGroupId,
-                $"🤠 всего пользователей: {count}");
+            HttpClient.PostAsync("https://api.vk.com/method/messages.send", new FormUrlEncodedContent(
+                new Dictionary<string, string>
+                {
+                    {"random_id", _random.Next(int.MaxValue).ToString()},
+                    {"peer_id", peer.ToString()},
+                    {"sticker_id", stickerId.ToString()},
+                    {"access_token", _configurationProvider.Configuration.GroupToken},
+                    {"v", "5.131"}
+                }));
         }
         catch (VkApiException e)
         {
             Logger.LogWarning("{ExceptionType}: {Message}", e.GetType(), e.Message);
         }
+    }
+
+    public void SetEditorStatus(long group, string text)
+    {
+        try
+        {
+            VkFramework.SetGroupStatus(group, text);
+        }
+        catch (VkApiException e)
+        {
+            Logger.LogWarning("{ExceptionType}: {Message}", e.GetType(), e.Message);
+        }
+    }
+
+    public void TickOnline(long group)
+    {
+        VkFrameworkExecution.Execute(() => { VkFramework.Api.Groups.EnableOnline((ulong) group); });
     }
 }

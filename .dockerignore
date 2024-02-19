@@ -1,6 +1,8 @@
 ﻿**/.dockerignore
 **/.env
 **/.git
+**/.github
+**/.gitattributes
 **/.gitignore
 **/.project
 **/.settings

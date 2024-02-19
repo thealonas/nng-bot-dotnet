@@ -6,8 +6,9 @@ public static class ListExtensions
 
     public static T GetRandom<T>(this IEnumerable<T> source)
     {
-        var list = source.ToList();
-        return list[Random.Next(list.Count)];
+        var openList = source.ToList();
+        var random = Random.Next(openList.Count);
+        return openList[random];
     }
 
     public static void RemoveIfExists<T>(this HashSet<T> source, T target)

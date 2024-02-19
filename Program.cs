@@ -16,19 +16,7 @@ public static class Program
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
-        var configs = new[]
-        {
-            "phrases.json"
-        };
         return Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((_, configuration) =>
-            {
-                configuration.SetBasePath(Directory.GetCurrentDirectory());
-
-                foreach (var path in configs) configuration.AddJsonFile($"Configs/{path}", false, true);
-
-                configuration.AddEnvironmentVariables();
-            })
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -52,7 +40,7 @@ public static class Program
                     o.Debug = false;
                     o.DiagnosticLevel = SentryLevel.Error;
 
-                    var targetEnv = EnvironmentHelper.GetString(EnvironmentConstants.Sentry, "prod");
+                    var targetEnv = EnvironmentHelper.GetString(EnvironmentConstants.Sentry, "dev");
                     o.Environment = targetEnv;
                 });
 

@@ -1,6 +1,6 @@
-﻿namespace nng;
+﻿namespace nng_bot.Models;
 
-public readonly struct EditorRequest
+public class EditorRequest
 {
     public EditorRequest(long user, long group)
     {

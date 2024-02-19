@@ -1,124 +1,124 @@
 ﻿using nng_bot.API;
+using nng_bot.BackgroundServices;
 using nng_bot.Exceptions;
 using nng_bot.Extensions;
 using nng_bot.Frameworks;
-using nng_bot.Models;
-using nng.Enums;
-using static nng_bot.Configs.UsersConfigurationProcessor;
-using static nng_bot.API.KeyBoardFramework;
+using nng.DatabaseModels;
+using nng.DatabaseProviders;
+using static nng_bot.Frameworks.KeyBoardFramework;
 
-namespace nng;
+namespace nng_bot;
 
 public class VkDialogHelper
 {
-    private readonly CacheFramework _cacheFramework;
-    private readonly PhraseFramework _phraseFramework;
+    private readonly CooldownFramework _cooldownFramework;
+    private readonly GroupsDatabaseProvider _groupsDatabaseProvider;
+    private readonly GroupStatsDatabaseProvider _groupStatsDatabaseProvider;
 
-    private readonly OperationStatus _status;
     private readonly VkController _vkController;
 
-    public VkDialogHelper(OperationStatus status, VkController vkController, PhraseFramework phraseFramework,
-        CacheFramework cacheFramework)
+    public VkDialogHelper(VkController vkController,
+        GroupStatsDatabaseProvider groupStatsDatabaseProvider, GroupsDatabaseProvider groupsDatabaseProvider,
+        CooldownFramework cooldownFramework)
     {
-        _status = status;
         _vkController = vkController;
-        _phraseFramework = phraseFramework;
-        _cacheFramework = cacheFramework;
-    }
-
-    public void SendErrorMessage(long user, string error = "")
-    {
-        _vkController.SendMessage(_phraseFramework.Error(error),
-            GoToMenuButtons, user);
+        _groupStatsDatabaseProvider = groupStatsDatabaseProvider;
+        _groupsDatabaseProvider = groupsDatabaseProvider;
+        _cooldownFramework = cooldownFramework;
     }
 
     public bool CheckIfCooldown(long user)
     {
-        if (_status.CoolDownUsers.All(x => user != x) && !IfLimitlessUserIsOnCoolDown(user)) return false;
+        if (!_cooldownFramework.HasCooldown(user)) return false;
 
-        _vkController.SendMessage(_phraseFramework.YouAreOnCoolDown,
+        _vkController.SendMessage(PhraseFramework.YouAreOnCoolDown,
             GoToMenuButtons, user);
 
         return true;
     }
 
-    public CacheGroup ChooseGroup(long userId, bool chooseFirst = true)
+    private static bool IsManager(User? user, long group)
     {
-        var cache = CacheFramework.LoadCache();
-        var groups = Enumerable.Reverse(cache.Data).ToList();
-        var priority = IfUserPrioritized(userId);
-        var managersCelling = ManagersCeiling;
+        return user?.Groups is not null && user.Groups.Any(x => x.Equals(group));
+    }
 
-        CacheGroup potentialGroup;
+    private GroupInfo GetById(long id)
+    {
+        return _groupsDatabaseProvider.Collection.ToList().First(x => x.GroupId == id);
+    }
+
+    private bool TryChooseMinorGroup(IEnumerable<GroupStats> groups, User? user, out LessThanFiftySubs exception)
+    {
+        exception = new LessThanFiftySubs(new GroupInfo());
         try
         {
-            if (chooseFirst)
-            {
-                potentialGroup = groups.First();
-
-                if (potentialGroup.Members is {Count: < 50} && !priority && !potentialGroup.IsManager(userId))
-                    throw new LessThanFiftySubs(potentialGroup);
-                if (potentialGroup.Members is {Count: >= 50} && potentialGroup.Members.Count < managersCelling &&
-                    !priority && !potentialGroup.IsManager(userId))
-                    return potentialGroup;
-            }
-
-            try
-            {
-                potentialGroup = groups.Where(cacheGroup =>
-                    cacheGroup.Members.Count >= 50 && !cacheGroup.IsManager(userId) &&
-                    cacheGroup.ManagerTotalCount < managersCelling).GetRandom();
-            }
-            catch (Exception)
-            {
-                throw new InvalidOperationException();
-            }
+            var potentialGroup = groups.Where(x =>
+                x.Members < 50 && !IsManager(user, x.GroupId) && x.Managers < 100).GetRandom();
+            exception = new LessThanFiftySubs(GetById(potentialGroup.GroupId));
+            return true;
         }
-        catch (InvalidOperationException)
+        catch (Exception)
         {
-            try
-            {
-                potentialGroup =
-                    groups.First(
-                        x => x.Managers.All(manager => manager != userId) && x.Managers.Count < managersCelling);
-                if (potentialGroup.Members.Count < 50)
-                    throw new LessThanFiftySubs(potentialGroup);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new NoAvailableGroups();
-            }
+            return false;
         }
-
-        return potentialGroup;
     }
 
-    public bool IfLimitlessUserIsOnCoolDown(long user)
+    private bool TryChooseMajorGroup(IEnumerable<GroupStats> groups, User? user, out GroupInfo group)
     {
-        if (!_status.LimitlessLimit.ContainsKey(user)) return false;
-        return (DateTime.Now - _status.LimitlessLimit[user]).TotalMinutes < 15;
-    }
-
-    public void ReplaceLongToGroup(ref CacheData cachedGroups, EditorRequest request)
-    {
-        for (var i = 0; i < cachedGroups.Data.Count; i++)
+        group = new GroupInfo();
+        try
         {
-            if (cachedGroups.Data[i].Id != request.Group) continue;
-            cachedGroups.Data[i] = _vkController.GetGroupInfo(request.Group);
-            return;
+            var potentialGroup = groups.Where(x =>
+                    x.Members is >= 50 and <= 100 && !IsManager(user, x.GroupId) && x.Managers < 100)
+                .GetRandom();
+            group = GetById(potentialGroup.GroupId);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 
-    public string GetBannedKeyboard(BanPriority priority)
+    private bool TryChooseUsualGroup(IEnumerable<GroupStats> groups, User? user, out GroupInfo group)
     {
-        return priority is not BanPriority.Red and not BanPriority.Green and not BanPriority.White
-            ? RestrictedStartButtons
-            : RestrictedStartButtonsWithUnbanRequest;
+        group = new GroupInfo();
+        try
+        {
+            var usualGroup = groups.Where(x =>
+                x.Members > 50 && !IsManager(user, x.GroupId) && x.Managers < 100).GetRandom();
+            group = GetById(usualGroup.GroupId);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
-    public string GetStartMenuKeyboard(long id)
+    public GroupInfo ChooseGroup(User? user)
     {
-        if (_cacheFramework.TryGetBannedPriority(id, out var priority)) return GetBannedKeyboard(priority);
-        return IfUserIsAdmin(id) ? AdminStartButtons : StartButtons;
+        var groups = _groupStatsDatabaseProvider.Collection.ToList();
+
+        var priority = user.HasPriority();
+
+        if (!priority && TryChooseMinorGroup(groups, user, out var exception)) throw exception;
+
+        if (TryChooseMajorGroup(groups, user, out var potentialGroup)) return potentialGroup;
+
+        if (TryChooseUsualGroup(groups, user, out potentialGroup)) return potentialGroup;
+
+        throw new NoAvailableGroups();
+    }
+
+    public static string GetStartMenuKeyboard(User? user)
+    {
+        if (user is null) return StartButtons;
+        return user.Banned ? RestrictedStartButtons : StartButtons;
+    }
+
+    public GroupInfo FindGroupById(long id)
+    {
+        return _groupsDatabaseProvider.Collection.ToList().First(x => x.GroupId.Equals(id));
     }
 }

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using nng;
-using nng_bot.Frameworks;
-using nng_bot.Models;
 using Sentry;
 using VkNet.Model;
 using VkNet.Utils;
@@ -11,19 +9,24 @@ namespace nng_bot.Controllers;
 [Route("")]
 public class EditorController : Controller
 {
-    private readonly Config _configuration;
+    private readonly ConfigurationProvider _configuration;
     private readonly DialogEntry _entryPoint;
 
-    public EditorController(DialogEntry entryPoint)
+    private readonly long _group;
+    private readonly string _secret;
+
+    public EditorController(DialogEntry entryPoint, ConfigurationProvider provider)
     {
-        _configuration = EnvironmentConfiguration.GetInstance().Configuration;
         _entryPoint = entryPoint;
+        _configuration = provider;
+        var config = provider.Configuration;
+        _group = config.GroupId;
+        _secret = config.GroupSecret;
     }
 
     private bool IsAllowed(long group, string secret)
     {
-        return _configuration.Auth.DialogGroupId.Equals(group) &&
-               _configuration.Auth.DialogGroupSecret.Equals(secret);
+        return _group.Equals(group) && _secret.Equals(secret);
     }
 
     [HttpPost]
@@ -34,27 +37,18 @@ public class EditorController : Controller
         switch (vkEvent.Type)
         {
             case "confirmation":
-                return Ok(_configuration.Auth.DialogGroupConfirm);
+                return Ok(_configuration.Configuration.GroupConfirm);
             case "message_new":
             {
                 var message = Message.FromJson(new VkResponse(vkEvent.Object));
-                Task.Run(() => RunDialog(message));
+                Task.Run(() => _entryPoint.Enter(message)).ContinueWith(task =>
+                {
+                    if (task is {IsFaulted: true, Exception: not null}) SentrySdk.CaptureException(task.Exception);
+                });
                 break;
             }
         }
 
         return Ok("ok");
-    }
-
-    private void RunDialog(Message message)
-    {
-        try
-        {
-            _entryPoint.Enter(message);
-        }
-        catch (Exception e)
-        {
-            SentrySdk.CaptureException(e);
-        }
     }
 }

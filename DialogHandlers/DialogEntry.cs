@@ -1,50 +1,30 @@
-﻿using nng_bot.API;
+﻿using nng_bot;
+using nng_bot.API;
 using nng_bot.Frameworks;
+using nng_bot.Providers;
 using VkNet.Model;
-using static nng_bot.Configs.UsersConfigurationProcessor;
-using static nng_bot.API.KeyBoardFramework;
+using static nng_bot.Frameworks.KeyBoardFramework;
+using User = nng.DatabaseModels.User;
 
 namespace nng;
 
 public class DialogEntry
 {
-    private readonly VkDialogAdminHandler _adminHandler;
-    private readonly CacheFramework _cacheFramework;
-
-    private readonly EnvironmentConfiguration _configuration;
-
-    private readonly VkDialogHelper _dialogHelper;
     private readonly VkDialogPayloadHandler _payloadHandler;
     private readonly PhraseFramework _phraseFramework;
 
     private readonly OperationStatus _status;
-    private readonly VkDialogUnbanRequests _unbanHandler;
+    private readonly UserFramework _userFramework;
     private readonly VkController _vkController;
 
-    public DialogEntry(OperationStatus status, VkController vkController, VkDialogUnbanRequests unbanHandler,
-        VkDialogAdminHandler adminHandler, VkDialogPayloadHandler payloadHandler, VkDialogHelper dialogHelper,
-        PhraseFramework phraseFramework, CacheFramework cacheFramework)
+    public DialogEntry(OperationStatus status, VkController vkController, VkDialogPayloadHandler payloadHandler,
+        UserFramework userFramework, PhraseFramework phraseFramework)
     {
         _status = status;
         _vkController = vkController;
-        _configuration = EnvironmentConfiguration.GetInstance();
-        _unbanHandler = unbanHandler;
-        _adminHandler = adminHandler;
         _payloadHandler = payloadHandler;
-        _dialogHelper = dialogHelper;
+        _userFramework = userFramework;
         _phraseFramework = phraseFramework;
-        _cacheFramework = cacheFramework;
-    }
-
-    private bool TryGetAdminRequest(long user, out AdminRequest request)
-    {
-        request = new AdminRequest();
-
-        if (!_status.AdminRequests.Any(x => x.Admin == user && x.IsValid)) return false;
-
-        request = _status.AdminRequests.First(x => x.Admin == user && x.IsValid);
-
-        return true;
     }
 
     public void Enter(Message message)
@@ -52,86 +32,81 @@ public class DialogEntry
         if (message.FromId is null) throw new NullReferenceException("FromId is null");
         var user = (long) message.FromId;
 
-        if (_status.BackingTaskInProgress)
+        User? profile;
+
+        try
         {
-            _status.UsersBotIsAvailable.Add(user);
-            _vkController.SendMessage(_phraseFramework.TempUnavailable,
+            profile = _userFramework.GetById(user);
+        }
+        catch (Exception)
+        {
+            profile = null;
+        }
+
+        if (message.Payload is null)
+        {
+            _vkController.SendMessage(PhraseFramework.CommandNotFound,
                 GoToMenuButtons, user);
             return;
         }
 
-        if (TryGetAdminRequest(user, out var request))
-        {
-            if (message.Payload != PayloadAdminActions.AdminPanel)
-            {
-                _adminHandler.SendProfileInfo(user, message, request);
-                return;
-            }
-
-            _status.AdminRequests.Remove(request);
-        }
-
-        if (message.Payload == null)
-        {
-            _vkController.SendMessage(_phraseFramework.CommandNotFound,
-                GoToMenuButtons, user);
-            return;
-        }
-
-        if (PayloadAdminActions.IsAdminPayload(message.Payload) && !IfUserIsAdmin(user))
-        {
-            _vkController.SendMessage(_phraseFramework.Error("NRE"),
-                GoToMenuButtons, user);
-            return;
-        }
+        var regDate = UsersRegistrationDateProvider.GetRegistrationDate(user);
 
         switch (message.Payload)
         {
-            #region Regular
-
             case PayloadTemplates.StartDialog:
-            case PayloadTemplates.ReturnBack:
-                if (_status.UsersToEditorGiving.Any(x => x.User == user))
-                    _status.UsersToEditorGiving.RemoveWhere(x => x.User == user);
+                _status.ClearRequests(user);
+                _vkController.SendSticker(user, 60790);
+                _vkController.SendMessage(PhraseFramework.MainMenu, VkDialogHelper.GetStartMenuKeyboard(profile), user);
+                break;
 
-                _vkController.SendMessage(_phraseFramework.MainMenu, _dialogHelper.GetStartMenuKeyboard(user), user);
+            case PayloadTemplates.ReturnBack:
+                _status.ClearRequests(user);
+                _vkController.SendMessage(PhraseFramework.MainMenu, VkDialogHelper.GetStartMenuKeyboard(profile), user);
                 break;
 
             case PayloadTemplates.MyProfile:
-                var priority = IfUserPrioritized(user);
-                var profile = _cacheFramework.LoadProfile(user);
-                var userMessage = _phraseFramework.FormProfile(profile, priority);
+                var vkUser = _vkController.VkFramework.GetUser(user);
+                var name = $"{vkUser.FirstName} {vkUser.LastName}";
+
+                if (profile is null)
+                {
+                    _vkController.SendMessage(_phraseFramework.FormBlankProfile(user, name, regDate), GoToMenuButtons,
+                        user);
+                    return;
+                }
+
+                var userMessage = _phraseFramework.FormProfile(profile, regDate);
                 _vkController.SendMessage(userMessage, GoToMenuButtons, user);
                 break;
 
             case PayloadTemplates.GiveEditorPayload:
-                if (!_configuration.Configuration.EditorGrantEnabled)
+                if ((DateTime.Now - regDate)?.TotalDays < 180)
                 {
-                    _vkController.SendMessage(_phraseFramework.NoAvailableSlots,
+                    _vkController.SendMessage(PhraseFramework.YourAccountIsTooYoung,
                         GoToMenuButtons, user);
                     return;
                 }
 
-                if (_cacheFramework.LoadProfile(user).EditorGroups.Length > 0)
+                if (profile?.Groups is not null && profile.Groups.Any())
                 {
-                    _payloadHandler.GiveEditor(user);
+                    _payloadHandler.GiveEditor(user, profile);
                     break;
                 }
 
-                _vkController.SendMessage(_phraseFramework.AgreeWithRules,
+                _vkController.SendMessage(PhraseFramework.AgreeWithRules,
                     AgreeWithRulesButtons, user);
                 break;
 
-            case PayloadTemplates.UnbanMe:
-                _payloadHandler.SubmitUnBanRequest(user);
-                break;
-
-            case PayloadTemplates.UnbanMeRequest:
-                _payloadHandler.UnBanMe(user);
-                break;
-
             case PayloadTemplates.ForceGiveEditorPayload:
-                _payloadHandler.GiveEditor(user);
+                if ((DateTime.Now - regDate)?.TotalDays < 180)
+                {
+                    _vkController.SendMessage(PhraseFramework.YourAccountIsTooYoung,
+                        GoToMenuButtons, user);
+                    return;
+                }
+
+                _payloadHandler.GiveEditor(user, profile);
                 break;
 
             case PayloadTemplates.IveJoined:
@@ -142,62 +117,8 @@ public class DialogEntry
                 _payloadHandler.JoinedLessThanFiftySubs(user);
                 break;
 
-            #endregion
-
-            #region AdminRequests
-
-            case PayloadAdminActions.AdminPanel:
-                _adminHandler.PanelEnter(user);
-                break;
-
-            case PayloadAdminActions.GroupsStatistics:
-                _adminHandler.GetStatistics(user);
-                break;
-
-            case PayloadAdminActions.ClearCache:
-                _adminHandler.ClearCache(user);
-                break;
-
-            case PayloadAdminActions.ClearBanned:
-                _adminHandler.ClearBanned(user);
-                break;
-
-            case PayloadAdminActions.ShowOtherUserProfile:
-                _adminHandler.ShowUserProfile(user);
-                break;
-
-            #endregion
-
-            #region UnbanRequests
-
-            case PayloadAdminActions.UnbanRequests:
-                _unbanHandler.PanelUnbanRequests(user);
-                break;
-
-            case PayloadAdminActions.UnbanRequestMoveForward:
-                _unbanHandler.UnbanRequestMoveForward(user);
-                break;
-
-            case PayloadAdminActions.UnbanRequestMoveBack:
-                _unbanHandler.UnbanRequestMoveBackward(user);
-                break;
-
-            case PayloadAdminActions.UnbanRequestAccept:
-                _unbanHandler.UnbanRequestAccept(user);
-                break;
-
-            case PayloadAdminActions.UnbanRequestDeny:
-                _unbanHandler.UnbanRequestDeny(user);
-                break;
-
-            case PayloadAdminActions.UnbanRequestDelete:
-                _unbanHandler.UnbanRequestDelete(user);
-                break;
-
-            #endregion
-
             default:
-                _vkController.SendMessage(_phraseFramework.MainMenu,
+                _vkController.SendMessage(PhraseFramework.MainMenu,
                     StartButtons, user);
                 break;
         }

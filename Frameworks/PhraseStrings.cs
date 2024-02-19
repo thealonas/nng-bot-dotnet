@@ -37,6 +37,11 @@ public static class PhraseStrings
         return str.SetBase("{Editor}", val);
     }
 
+    public static string SetBanStatus(this string str, object val)
+    {
+        return str.SetBase("{BanStatus}", val);
+    }
+
     public static string SetStatus(this string str, object val)
     {
         return str.SetBase("{Status}", val);

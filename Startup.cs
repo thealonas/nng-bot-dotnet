@@ -1,49 +1,49 @@
 using nng;
 using nng_bot.API;
+using nng_bot.BackgroundServices;
 using nng_bot.Frameworks;
-using nng.VkFrameworks;
-using VkNet.Exception;
+using nng_bot.Providers;
+using nng.DatabaseProviders;
+using nng.Helpers;
+using Redis.OM;
 
 namespace nng_bot;
 
 public class Startup
 {
-    private readonly EnvironmentConfiguration _configuration;
-
-    public Startup()
-    {
-        _configuration = EnvironmentConfiguration.GetInstance();
-    }
-
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
         services.AddMvc().AddNewtonsoftJson();
-        try
-        {
-            services.AddSingleton(_ => new VkFramework(_configuration.Configuration.Auth.UserToken));
-        }
-        catch (Exception e)
-        {
-            if (e is UserAuthorizationFailException) Console.WriteLine("Возможно, неправильный токен пользователя");
-            Console.WriteLine($"{e.GetType()}: {e.Message}");
-            throw;
-        }
 
-        services.AddSingleton(_ => new VkFrameworkHttp(_configuration.Configuration.Auth.DialogGroupToken));
+        var redisConnectionProvider = new RedisConnectionProvider(EnvironmentHelper.GetString("REDIS_URL"));
+
+        services.AddSingleton(redisConnectionProvider);
+
+        services.AddSingleton<BotSettingsDatabaseProvider>();
+        services.AddSingleton<ConfigurationProvider>();
+        services.AddSingleton<TokensDatabaseProvider>();
+        services.AddSingleton<SettingsDatabaseProvider>();
+        services.AddSingleton<GroupsDatabaseProvider>();
+        services.AddSingleton<GroupStatsDatabaseProvider>();
+        services.AddSingleton<UsersDatabaseProvider>();
+
+        services.AddSingleton<UserFramework>();
+
+        services.AddSingleton<VkFrameworkProvider>();
+
         services.AddSingleton<VkController>();
         services.AddSingleton<StatusFramework>();
         services.AddSingleton<OperationStatus>();
-        services.AddSingleton<CacheFramework>();
-        services.AddHostedService<CacheScheduledTask>();
         services.AddSingleton<PhraseFramework>();
-        services.AddSingleton<CacheScheduledTaskProcessor>();
 
         services.AddSingleton<VkDialogHelper>();
         services.AddSingleton<VkDialogPayloadHandler>();
-        services.AddSingleton<VkDialogAdminHandler>();
-        services.AddSingleton<VkDialogUnbanRequests>();
         services.AddSingleton<DialogEntry>();
+
+        services.AddSingleton<CooldownFramework>();
+
+        services.AddHostedService<InfoPublisher>();
     }
 
     private static void LoadInstant(IApplicationBuilder app)
