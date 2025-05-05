@@ -2,7 +2,7 @@
 WORKDIR /app
 EXPOSE 1220
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/nightly/sdk:8.0-preview-alpine AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/nightly/sdk:10.0-preview-alpine AS build
 ARG TARGETARCH
 WORKDIR /src
 COPY ["nng-bot.csproj", "."]
